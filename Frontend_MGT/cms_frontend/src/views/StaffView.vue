@@ -183,22 +183,28 @@ const openCreateModal = () => {
 
 const editItem = (item) => {
   editingId.value = item.id
-  form.value = { ...item }
+  form.value = JSON.parse(JSON.stringify(item))
   showAddForm.value = true
 }
 
 const saveItem = async () => {
+  if (submitting.value) return
   submitting.value = true
+  
   try {
     if (editingId.value) {
       await staffApi.update(editingId.value, form.value)
     } else {
       await staffApi.create(form.value)
     }
+    
+    // Explicitly hide modal and clear form state before reloading directory
+    showAddForm.value = false
     resetForm()
     await load()
   } catch (error) {
     console.error('Failed to save staff record:', error)
+    alert('An error occurred while saving. Please try again.')
   } finally {
     submitting.value = false
   }

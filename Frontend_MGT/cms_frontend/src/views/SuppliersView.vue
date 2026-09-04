@@ -14,6 +14,11 @@
       </button>
     </div>
 
+    <!-- Page-level error banner (e.g. failed initial load) -->
+    <div v-if="loadError" class="alert-error-custom mb-3">
+      {{ loadError }}
+    </div>
+
     <!-- Main Table Card -->
     <div class="card content-card border-0 shadow-sm">
       <div class="card-header border-bottom-0 d-flex justify-content-between align-items-center p-3 px-4">
@@ -90,16 +95,20 @@
     </div>
 
     <!-- Modal Overlay -->
-    <div v-if="showAddForm" class="custom-modal-backdrop d-flex align-items-center justify-content-center">
+    <div v-if="showAddForm" class="custom-modal-backdrop d-flex align-items-center justify-content-center" @click.self="resetForm">
       <div class="custom-modal-dialog w-100 max-w-lg">
         <div class="modal-content-custom">
           <div class="modal-header-custom d-flex align-items-center justify-content-between p-4">
             <h5 class="modal-title mb-0">{{ editingId ? 'Edit Supplier Details' : 'Register New Supplier' }}</h5>
             <button type="button" class="btn-close-custom" @click="resetForm">✕</button>
           </div>
-          
+
           <form @submit.prevent="saveItem">
             <div class="modal-body-custom p-4 d-flex flex-column gap-3">
+              <div v-if="errorMsg" class="alert-error-custom">
+                {{ errorMsg }}
+              </div>
+
               <div>
                 <label class="form-label-custom">Company Name *</label>
                 <input v-model="form.companyName" type="text" class="form-input-custom" placeholder="e.g. Acme Concrete & Supplies" required />
@@ -131,7 +140,7 @@
             </div>
 
             <div class="modal-footer-custom p-4 d-flex justify-content-end gap-2">
-              <button type="button" class="btn btn-outline-custom" @click="resetForm">Cancel</button>
+              <button type="button" class="btn btn-outline-custom" @click="resetForm" :disabled="submitting">Cancel</button>
               <button type="submit" class="btn btn-primary-custom" :disabled="submitting">
                 <span v-if="submitting" class="spinner-border spinner-border-sm me-1"></span>
                 {{ editingId ? 'Update Supplier' : 'Save Supplier' }}
@@ -153,6 +162,8 @@ const loading = ref(false)
 const submitting = ref(false)
 const showAddForm = ref(false)
 const editingId = ref(null)
+const errorMsg = ref('')
+const loadError = ref('')
 
 const defaultForm = () => ({
   companyName: '',
@@ -165,11 +176,13 @@ const form = ref(defaultForm())
 
 const load = async () => {
   loading.value = true
+  loadError.value = ''
   try {
     const response = await suppliersApi.getAll()
     items.value = response.data || []
   } catch (error) {
     console.error('Failed to load suppliers:', error)
+    loadError.value = 'Could not load suppliers. Please refresh the page and try again.'
   } finally {
     loading.value = false
   }
@@ -178,27 +191,54 @@ const load = async () => {
 const openCreateModal = () => {
   editingId.value = null
   form.value = defaultForm()
+  errorMsg.value = ''
   showAddForm.value = true
 }
 
 const editItem = (item) => {
   editingId.value = item.id
-  form.value = { ...item }
+  // Deep clone to break reference coupling with the table row
+  form.value = JSON.parse(JSON.stringify(item))
+  errorMsg.value = ''
   showAddForm.value = true
 }
 
 const saveItem = async () => {
+  if (!form.value.companyName?.trim()) {
+    errorMsg.value = 'Company name is required.'
+    return
+  }
+
   submitting.value = true
+  errorMsg.value = ''
+
   try {
     if (editingId.value) {
-      await suppliersApi.update(editingId.value, form.value)
+      const response = await suppliersApi.update(editingId.value, form.value)
+      const index = items.value.findIndex(i => i.id === editingId.value)
+      if (index !== -1) {
+        items.value[index] = response?.data ?? { ...form.value, id: editingId.value }
+      } else {
+        await load()
+      }
     } else {
-      await suppliersApi.create(form.value)
+      const response = await suppliersApi.create(form.value)
+      if (response?.data) {
+        items.value.push(response.data)
+      } else {
+        // Fallback reload if backend doesn't return the created record
+        await load()
+      }
     }
+
+    // Only close/reset once the save has actually succeeded
     resetForm()
-    await load()
   } catch (error) {
     console.error('Failed to save supplier:', error)
+    errorMsg.value =
+      error?.response?.data?.message ||
+      'Failed to save supplier. Please check the details and try again.'
+    // Modal stays open so the user sees the error and can retry
   } finally {
     submitting.value = false
   }
@@ -208,9 +248,10 @@ const deleteItem = async (id) => {
   if (confirm('Are you sure you want to delete this supplier?')) {
     try {
       await suppliersApi.delete(id)
-      await load()
+      items.value = items.value.filter(item => item.id !== id)
     } catch (error) {
       console.error('Failed to delete supplier:', error)
+      alert('Failed to delete supplier. Please try again.')
     }
   }
 }
@@ -218,6 +259,7 @@ const deleteItem = async (id) => {
 const resetForm = () => {
   editingId.value = null
   showAddForm.value = false
+  errorMsg.value = ''
   form.value = defaultForm()
 }
 
@@ -379,6 +421,12 @@ onMounted(load)
   transform: translateY(-1px);
 }
 
+.btn-primary-custom:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
 .btn-outline-custom {
   background: transparent;
   border: 1px solid var(--card-border);
@@ -392,6 +440,11 @@ onMounted(load)
 .btn-outline-custom:hover {
   background: rgba(255, 255, 255, 0.05);
   color: var(--text-main);
+}
+
+.btn-outline-custom:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .btn-action-sm {
@@ -489,5 +542,15 @@ onMounted(load)
 .form-select-custom option {
   background-color: #0f172a;
   color: var(--text-main);
+}
+
+/* Error banner */
+.alert-error-custom {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #f87171;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.85rem;
 }
 </style>

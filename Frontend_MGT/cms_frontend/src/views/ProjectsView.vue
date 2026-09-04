@@ -386,6 +386,7 @@ const closeForm = () => {
 }
 
 const saveProject = async () => {
+  if (saving.value) return
   saving.value = true
 
   try {
@@ -397,7 +398,7 @@ const saveProject = async () => {
       endDate: form.value.endDate || null,
       budget: Number(form.value.budget) || 0,
       progress: Number(form.value.progress) || 0,
-      description: form.value.description
+      description: form.value.description || ''
     }
 
     if (editingId.value) {
@@ -406,7 +407,12 @@ const saveProject = async () => {
       await projectsApi.create(payload)
     }
 
-    closeForm()
+    // Explicitly hide modal before refreshing list
+    showAddForm.value = false
+    editingId.value = null
+    form.value = emptyForm()
+
+    // Reload directory data
     await loadProjects()
   } catch (error) {
     console.error('Failed to save project:', error)
