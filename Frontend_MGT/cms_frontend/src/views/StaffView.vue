@@ -119,14 +119,19 @@
                 </div>
 
                 <div class="col-6">
-                  <label class="form-label-custom">Annual Salary ($)</label>
-                  <input v-model.number="form.salary" type="number" step="0.01" min="0" class="form-input-custom" placeholder="e.g. 65000" />
+                  <label class="form-label-custom">Annual Salary ($) *</label>
+                  <input v-model.number="form.salary" type="number" step="0.01" min="0" class="form-input-custom" placeholder="e.g. 65000" required />
                 </div>
               </div>
 
               <div>
                 <label class="form-label-custom">Email Address *</label>
                 <input v-model="form.email" type="email" class="form-input-custom" placeholder="jane.doe@company.com" required />
+              </div>
+
+              <div>
+                <label class="form-label-custom">Phone Number *</label>
+                <input v-model="form.phone" type="tel" class="form-input-custom" placeholder="e.g. 555-0101" required />
               </div>
             </div>
 
@@ -158,6 +163,7 @@ const defaultForm = () => ({
   name: '',
   role: 'General Staff',
   email: '',
+  phone: '',
   salary: null
 })
 

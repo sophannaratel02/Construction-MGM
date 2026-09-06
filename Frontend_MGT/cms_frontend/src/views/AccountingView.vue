@@ -49,7 +49,7 @@
     </div>
 
     <!-- Modal -->
-    <div v-if="showAddForm" class="modal d-block" style="background: rgba(0,0,0,0.5);">
+    <div v-if="showAddForm" class="modal d-block staff-style-modal">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">
@@ -72,8 +72,15 @@
                 <input v-model="form.category" type="text" class="form-control"  />
               </div>
               <div class="mb-3">
+                <label class="form-label">Type *</label>
+                <select v-model="form.type" class="form-select" required>
+                  <option value="Income">Income</option>
+                  <option value="Expense">Expense</option>
+                </select>
+              </div>
+              <div class="mb-3">
                 <label class="form-label">Amount</label>
-                <input v-model="form.amount" type="number" class="form-control"  />
+                <input v-model.number="form.amount" type="number" min="0" step="0.01" class="form-control" required />
               </div>
             </div>
             <div class="modal-footer">

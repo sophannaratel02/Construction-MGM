@@ -23,9 +23,6 @@ app.use(cors())
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 
-// Connect to database
-connectDB()
-
 // Routes
 app.use('/api/projects', projectsRouter)
 app.use('/api/staff', staffRouter)
@@ -42,7 +39,12 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Server is running' })
 })
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`)
-})
+// Start only after the database pool has been verified.
+const startServer = async () => {
+  await connectDB()
+  app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`)
+  })
+}
+
+startServer()

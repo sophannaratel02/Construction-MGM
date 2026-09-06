@@ -97,9 +97,8 @@
     <div 
       v-if="showAddForm" 
       ref="modalRef"
-      class="modal fade show d-block" 
+      class="modal fade show d-block staff-style-modal"
       tabindex="-1" 
-      style="background: rgba(0, 0, 0, 0.5);"
       @click.self="!saving && resetForm()"
       @keydown.esc="!saving && resetForm()"
     >
@@ -128,7 +127,7 @@
               </div>
 
               <div class="mb-3">
-                <label for="email" class="form-label">Email</label>
+                <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
                 <input 
                   id="email"
                   v-model.trim="form.email" 
@@ -136,6 +135,7 @@
                   class="form-control" 
                   :class="{ 'is-invalid': formErrors.email }"
                   placeholder="name@company.com"
+                  required
                   :disabled="saving"
                 />
                 <div v-if="formErrors.email" class="invalid-feedback">
@@ -144,25 +144,43 @@
               </div>
 
               <div class="mb-3">
-                <label for="phone" class="form-label">Phone</label>
+                <label for="contactPerson" class="form-label">Contact Person <span class="text-danger">*</span></label>
+                <input
+                  id="contactPerson"
+                  v-model.trim="form.contactPerson"
+                  type="text"
+                  class="form-control"
+                  :class="{ 'is-invalid': formErrors.contactPerson }"
+                  placeholder="e.g. Jane Smith"
+                  :disabled="saving"
+                />
+                <div v-if="formErrors.contactPerson" class="invalid-feedback">
+                  {{ formErrors.contactPerson }}
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label for="phone" class="form-label">Phone <span class="text-danger">*</span></label>
                 <input 
                   id="phone"
                   v-model.trim="form.phone" 
                   type="tel" 
                   class="form-control" 
                   placeholder="+1 (555) 000-0000"
+                  required
                   :disabled="saving"
                 />
               </div>
 
               <div class="mb-3">
-                <label for="address" class="form-label">Address</label>
+                <label for="address" class="form-label">Address <span class="text-danger">*</span></label>
                 <textarea 
                   id="address"
                   v-model.trim="form.address" 
                   class="form-control" 
                   rows="3"
                   placeholder="Street address, city, state, zip code"
+                  required
                   :disabled="saving"
                 ></textarea>
               </div>
@@ -209,6 +227,7 @@ const successMessage = ref('')
 // Form state & validations
 const initialForm = {
   companyName: '',
+  contactPerson: '',
   email: '',
   phone: '',
   address: ''
@@ -217,7 +236,10 @@ const initialForm = {
 const form = ref({ ...initialForm })
 const formErrors = reactive({
   companyName: '',
-  email: ''
+  contactPerson: '',
+  email: '',
+  phone: '',
+  address: ''
 })
 
 // Enhanced helper to extract detailed API error messages
@@ -237,13 +259,14 @@ const handleApiError = (error, defaultMsg) => {
 // Format payload: convert empty strings to null & include snake_case keys for compatibility
 const preparePayload = (formData) => {
   const companyName = formData.companyName?.trim() || ''
+  const contactPerson = formData.contactPerson?.trim() || ''
   const email = formData.email?.trim() || null
   const phone = formData.phone?.trim() || null
   const address = formData.address?.trim() || null
 
   return {
     companyName,
-    company_name: companyName, // Backends expecting snake_case
+    contactPerson,
     email,
     phone,
     address
@@ -273,19 +296,40 @@ const load = async () => {
 const validateForm = () => {
   let isValid = true
   formErrors.companyName = ''
+  formErrors.contactPerson = ''
   formErrors.email = ''
+  formErrors.phone = ''
+  formErrors.address = ''
 
   if (!form.value.companyName) {
     formErrors.companyName = 'Company Name is required.'
     isValid = false
   }
 
-  if (form.value.email) {
+  if (!form.value.contactPerson) {
+    formErrors.contactPerson = 'Contact Person is required.'
+    isValid = false
+  }
+
+  if (!form.value.email) {
+    formErrors.email = 'Email is required.'
+    isValid = false
+  } else {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(form.value.email)) {
       formErrors.email = 'Please enter a valid email address.'
       isValid = false
     }
+  }
+
+  if (!form.value.phone) {
+    formErrors.phone = 'Phone is required.'
+    isValid = false
+  }
+
+  if (!form.value.address) {
+    formErrors.address = 'Address is required.'
+    isValid = false
   }
 
   return isValid
@@ -330,6 +374,7 @@ const editItem = async (item) => {
   editingId.value = item.id
   form.value = { 
     companyName: item.companyName || item.company_name || '',
+    contactPerson: item.contactPerson || item.contact_person || '',
     email: item.email || '',
     phone: item.phone || '',
     address: item.address || ''
@@ -360,7 +405,10 @@ const resetForm = () => {
   showAddForm.value = false
   form.value = { ...initialForm }
   formErrors.companyName = ''
+  formErrors.contactPerson = ''
   formErrors.email = ''
+  formErrors.phone = ''
+  formErrors.address = ''
 }
 
 onMounted(load)

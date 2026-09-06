@@ -115,20 +115,24 @@
               </div>
 
               <div class="row g-3">
+                <div>
+                  <label class="form-label-custom">Contact Person *</label>
+                  <input v-model="form.contactPerson" type="text" class="form-input-custom" placeholder="e.g. Jane Smith" required />
+                </div>
                 <div class="col-6">
-                  <label class="form-label-custom">Email Address</label>
-                  <input v-model="form.email" type="email" class="form-input-custom" placeholder="sales@acme.com" />
+                  <label class="form-label-custom">Email Address *</label>
+                  <input v-model="form.email" type="email" class="form-input-custom" placeholder="sales@acme.com" required />
                 </div>
 
                 <div class="col-6">
-                  <label class="form-label-custom">Phone Number</label>
-                  <input v-model="form.phone" type="tel" class="form-input-custom" placeholder="+1 (555) 000-0000" />
+                  <label class="form-label-custom">Phone Number *</label>
+                  <input v-model="form.phone" type="tel" class="form-input-custom" placeholder="+1 (555) 000-0000" required />
                 </div>
               </div>
 
               <div>
-                <label class="form-label-custom">Product Category</label>
-                <select v-model="form.productCategory" class="form-input-custom form-select-custom">
+                <label class="form-label-custom">Product Category *</label>
+                <select v-model="form.productCategory" class="form-input-custom form-select-custom" required>
                   <option value="Raw Materials">Raw Materials</option>
                   <option value="Heavy Machinery">Heavy Machinery</option>
                   <option value="Electrical & Plumbing">Electrical & Plumbing</option>
@@ -167,6 +171,7 @@ const loadError = ref('')
 
 const defaultForm = () => ({
   companyName: '',
+  contactPerson: '',
   email: '',
   phone: '',
   productCategory: 'Raw Materials'
