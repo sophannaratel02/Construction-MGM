@@ -38,7 +38,7 @@ router.get('/:id', async (req, res) => {
 // POST create staff
 router.post('/', async (req, res) => {
   try {
-    const { name, role, email, phone, salary, status } = req.body
+    const { name, role, email, phone, salary, status, department, image } = req.body
     
     if (!name || !role || !email || !phone || !salary) {
       return res.status(400).json({ error: 'Missing required fields' })
@@ -47,12 +47,12 @@ router.post('/', async (req, res) => {
     const pool = getPool()
     const connection = await pool.getConnection()
     const [result] = await connection.query(
-      'INSERT INTO staff (name, role, email, phone, salary, status) VALUES (?, ?, ?, ?, ?, ?)',
-      [name, role, email, phone, salary, status || 'Active']
+      'INSERT INTO staff (name, role, email, phone, salary, status, department, image) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      [name, role, email, phone, salary, status || 'Active', department || 'Engineering', image || null]
     )
     connection.release()
     
-    res.status(201).json({ id: result.insertId, name, role, email, phone, salary, status: status || 'Active' })
+    res.status(201).json({ id: result.insertId, name, role, email, phone, salary, status: status || 'Active', department: department || 'Engineering', image: image || null })
   } catch (error) {
     console.error('Error creating staff:', error)
     res.status(500).json({ error: error.message })
@@ -62,17 +62,17 @@ router.post('/', async (req, res) => {
 // PUT update staff
 router.put('/:id', async (req, res) => {
   try {
-    const { name, role, email, phone, salary, status } = req.body
+    const { name, role, email, phone, salary, status, department, image } = req.body
     
     const pool = getPool()
     const connection = await pool.getConnection()
     await connection.query(
-      'UPDATE staff SET name = ?, role = ?, email = ?, phone = ?, salary = ?, status = ? WHERE id = ?',
-      [name, role, email, phone, salary, status, req.params.id]
+      'UPDATE staff SET name = ?, role = ?, email = ?, phone = ?, salary = ?, status = ?, department = ?, image = ? WHERE id = ?',
+      [name, role, email, phone, salary, status, department, image || null, req.params.id]
     )
     connection.release()
     
-    res.json({ id: req.params.id, name, role, email, phone, salary, status })
+    res.json({ id: req.params.id, name, role, email, phone, salary, status, department, image: image || null })
   } catch (error) {
     console.error('Error updating staff:', error)
     res.status(500).json({ error: error.message })

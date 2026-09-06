@@ -86,4 +86,12 @@ export const dashboardApi = {
   getStats: () => api.get('/dashboard/stats'),
 }
 
+// Audit Logs & Notifications API
+export const auditLogsApi = {
+  getAll: () => api.get('/audit-logs'),
+  create: (data) => api.post('/audit-logs', data),
+  markAllRead: () => api.patch('/audit-logs/mark-read'),
+  clearAll: () => api.delete('/audit-logs'),
+}
+
 export default api

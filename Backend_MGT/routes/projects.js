@@ -1,5 +1,6 @@
 import express from 'express'
 import { getPool } from '../config/database.js'
+import { createAuditLog } from './auditLogs.js'
 
 const router = express.Router()
 
@@ -50,6 +51,14 @@ router.post('/', async (req, res) => {
       'INSERT INTO projects (name, client, status, startDate, budget) VALUES (?, ?, ?, ?, ?)',
       [name, client, status, startDate, budget]
     )
+
+    await createAuditLog(connection, {
+      action: 'CREATE',
+      module: 'Projects',
+      description: `Created new project "${name}" for client ${client} ($${Number(budget).toLocaleString()})`,
+      severity: 'info'
+    })
+
     connection.release()
     
     res.status(201).json({ id: result.insertId, name, client, status, startDate, budget })
@@ -70,6 +79,14 @@ router.put('/:id', async (req, res) => {
       'UPDATE projects SET name = ?, client = ?, status = ?, startDate = ?, budget = ?, progress = ? WHERE id = ?',
       [name, client, status, startDate, budget, progress || 0, req.params.id]
     )
+
+    await createAuditLog(connection, {
+      action: 'UPDATE',
+      module: 'Projects',
+      description: `Updated project "${name}" (Status: ${status}, Progress: ${progress || 0}%)`,
+      severity: 'info'
+    })
+
     connection.release()
     
     res.json({ id: req.params.id, name, client, status, startDate, budget })
@@ -85,6 +102,14 @@ router.delete('/:id', async (req, res) => {
     const pool = getPool()
     const connection = await pool.getConnection()
     await connection.query('DELETE FROM projects WHERE id = ?', [req.params.id])
+
+    await createAuditLog(connection, {
+      action: 'DELETE',
+      module: 'Projects',
+      description: `Deleted project ID #${req.params.id}`,
+      severity: 'warning'
+    })
+
     connection.release()
     
     res.json({ message: 'Project deleted successfully' })

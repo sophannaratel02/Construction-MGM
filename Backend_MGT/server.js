@@ -12,6 +12,7 @@ import accountingRouter from './routes/accounting.js'
 import clientsRouter from './routes/clients.js'
 import suppliersRouter from './routes/suppliers.js'
 import dashboardRouter from './routes/dashboard.js'
+import auditLogsRouter from './routes/auditLogs.js'
 
 dotenv.config()
 
@@ -22,6 +23,7 @@ const PORT = process.env.PORT || 3000
 app.use(cors())
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
+app.use(express.static('public'))
 
 // Routes
 app.use('/api/projects', projectsRouter)
@@ -33,6 +35,7 @@ app.use('/api/accounting', accountingRouter)
 app.use('/api/clients', clientsRouter)
 app.use('/api/suppliers', suppliersRouter)
 app.use('/api/dashboard', dashboardRouter)
+app.use('/api/audit-logs', auditLogsRouter)
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
