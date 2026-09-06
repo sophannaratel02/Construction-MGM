@@ -98,8 +98,19 @@
               </div>
 
               <div>
-                <label class="form-label-custom">Project</label>
-                <input v-model="form.project" type="text" class="form-input-custom" placeholder="e.g. Sector 7 Commercial Hub" />
+                <label class="form-label-custom">Project *</label>
+                <input v-model="form.project" type="text" class="form-input-custom" placeholder="e.g. Sector 7 Commercial Hub" required />
+              </div>
+
+              <div class="row g-3">
+                <div class="col-6">
+                  <label class="form-label-custom">Assigned To *</label>
+                  <input v-model="form.assignedTo" type="text" class="form-input-custom" placeholder="e.g. John Smith" required />
+                </div>
+                <div class="col-6">
+                  <label class="form-label-custom">Due Date *</label>
+                  <input v-model="form.dueDate" type="date" class="form-input-custom" required />
+                </div>
               </div>
 
               <div class="row g-3">
@@ -152,6 +163,8 @@ const editingId = ref(null)
 const defaultForm = () => ({
   title: '',
   project: '',
+  assignedTo: '',
+  dueDate: '',
   priority: 'Medium',
   status: 'Pending'
 })

@@ -49,7 +49,7 @@
     </div>
 
     <!-- Modal -->
-    <div v-if="showAddForm" class="modal d-block" style="background: rgba(0,0,0,0.5);">
+    <div v-if="showAddForm" class="modal d-block staff-style-modal">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">
@@ -75,6 +75,14 @@
                 <label class="form-label">Status</label>
                 <input v-model="form.status" type="text" class="form-control"  />
               </div>
+              <div class="mb-3">
+                <label class="form-label">Purchase Date *</label>
+                <input v-model="form.purchaseDate" type="date" class="form-control" required />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Cost *</label>
+                <input v-model.number="form.cost" type="number" min="0" step="0.01" class="form-control" required />
+              </div>
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" @click="showAddForm = false">Cancel</button>
@@ -95,7 +103,7 @@ const items = ref([])
 const loading = ref(false)
 const showAddForm = ref(false)
 const editingId = ref(null)
-const form = ref({})
+const form = ref({ name: '', type: '', serialNumber: '', status: 'Available', purchaseDate: '', cost: 0 })
 
 const load = async () => {
   loading.value = true
@@ -139,7 +147,7 @@ const deleteItem = async (id) => {
 const resetForm = () => {
   editingId.value = null
   showAddForm.value = false
-  form.value = {}
+  form.value = { name: '', type: '', serialNumber: '', status: 'Available', purchaseDate: '', cost: 0 }
 }
 
 onMounted(load)

@@ -124,7 +124,7 @@
     </div>
 
     <!-- Modal -->
-    <div v-if="showAddForm" class="modal d-block modal-backdrop-custom" @click.self="closeForm">
+    <div v-if="showAddForm" class="modal d-block modal-backdrop-custom staff-style-modal" @click.self="closeForm">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">
@@ -148,12 +148,13 @@
               </div>
 
               <div class="mb-3">
-                <label class="form-label">Category</label>
+                  <label class="form-label">Category <span class="text-danger">*</span></label>
                 <input
                   v-model.trim="form.category"
                   type="text"
                   class="form-control"
                   placeholder="e.g. Construction"
+                  required
                 />
               </div>
 
@@ -182,6 +183,17 @@
                       placeholder="0.00"
                     />
                   </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-6 mb-3">
+                  <label class="form-label">Unit <span class="text-danger">*</span></label>
+                  <input v-model.trim="form.unit" type="text" class="form-control" placeholder="e.g. Bag" required />
+                </div>
+                <div class="col-6 mb-3">
+                  <label class="form-label">Supplier <span class="text-danger">*</span></label>
+                  <input v-model.trim="form.supplier" type="text" class="form-control" placeholder="e.g. BuildTech Supplies" required />
                 </div>
               </div>
 
@@ -222,7 +234,7 @@ const sortDir = ref('asc')
 
 const LOW_STOCK_THRESHOLD = 5
 
-const emptyForm = () => ({ name: '', category: '', quantity: 0, unitPrice: 0 })
+const emptyForm = () => ({ name: '', category: '', unit: '', quantity: 0, unitPrice: 0, supplier: '' })
 const form = reactive(emptyForm())
 
 const load = async () => {
@@ -298,7 +310,10 @@ const saveItem = async () => {
   submitted.value = true
   saveError.value = ''
 
-  if (!form.name) return
+  if (!form.name || !form.category || !form.unit || !form.supplier) {
+    saveError.value = 'Name, category, unit, and supplier are required.'
+    return
+  }
 
   saving.value = true
   try {
@@ -324,8 +339,10 @@ const editItem = (item) => {
   Object.assign(form, {
     name: item.name ?? '',
     category: item.category ?? '',
+    unit: item.unit ?? '',
     quantity: item.quantity ?? 0,
     unitPrice: item.unitPrice ?? 0,
+    supplier: item.supplier ?? '',
   })
   submitted.value = false
   saveError.value = ''

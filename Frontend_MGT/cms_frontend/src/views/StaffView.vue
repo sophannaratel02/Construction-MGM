@@ -119,14 +119,19 @@
                 </div>
 
                 <div class="col-6">
-                  <label class="form-label-custom">Annual Salary ($)</label>
-                  <input v-model.number="form.salary" type="number" step="0.01" min="0" class="form-input-custom" placeholder="e.g. 65000" />
+                  <label class="form-label-custom">Annual Salary ($) *</label>
+                  <input v-model.number="form.salary" type="number" step="0.01" min="0" class="form-input-custom" placeholder="e.g. 65000" required />
                 </div>
               </div>
 
               <div>
                 <label class="form-label-custom">Email Address *</label>
                 <input v-model="form.email" type="email" class="form-input-custom" placeholder="jane.doe@company.com" required />
+              </div>
+
+              <div>
+                <label class="form-label-custom">Phone Number *</label>
+                <input v-model="form.phone" type="tel" class="form-input-custom" placeholder="e.g. 555-0101" required />
               </div>
             </div>
 
@@ -158,6 +163,7 @@ const defaultForm = () => ({
   name: '',
   role: 'General Staff',
   email: '',
+  phone: '',
   salary: null
 })
 
@@ -183,22 +189,28 @@ const openCreateModal = () => {
 
 const editItem = (item) => {
   editingId.value = item.id
-  form.value = { ...item }
+  form.value = JSON.parse(JSON.stringify(item))
   showAddForm.value = true
 }
 
 const saveItem = async () => {
+  if (submitting.value) return
   submitting.value = true
+  
   try {
     if (editingId.value) {
       await staffApi.update(editingId.value, form.value)
     } else {
       await staffApi.create(form.value)
     }
+    
+    // Explicitly hide modal and clear form state before reloading directory
+    showAddForm.value = false
     resetForm()
     await load()
   } catch (error) {
     console.error('Failed to save staff record:', error)
+    alert('An error occurred while saving. Please try again.')
   } finally {
     submitting.value = false
   }

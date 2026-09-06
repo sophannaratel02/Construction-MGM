@@ -72,6 +72,81 @@ body {
   line-height: 1.6;
 }
 
+/* Shared modal treatment matching the Staff management dialog. */
+.staff-style-modal {
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(6px);
+  z-index: 1050;
+}
+
+.staff-style-modal .modal-dialog {
+  width: min(100% - 2rem, 500px);
+  margin: 1rem auto;
+}
+
+.staff-style-modal .modal-content {
+  background-color: #1e293b !important;
+  color: #f8fafc !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 12px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.staff-style-modal .modal-header,
+.staff-style-modal .modal-footer {
+  border-color: rgba(255, 255, 255, 0.08);
+  padding: 1rem 1.5rem;
+}
+
+.staff-style-modal .modal-header {
+  background: #1e293b !important;
+}
+
+.staff-style-modal .modal-footer {
+  background: rgba(15, 23, 42, 0.3);
+}
+
+.staff-style-modal .modal-body {
+  padding: 1.5rem;
+}
+
+.staff-style-modal .modal-title,
+.staff-style-modal .form-label {
+  color: #f8fafc !important;
+}
+
+.staff-style-modal .form-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #94a3b8 !important;
+}
+
+.staff-style-modal .form-control,
+.staff-style-modal .form-select,
+.staff-style-modal .input-group-text {
+  background-color: rgba(15, 23, 42, 0.6) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  color: #f8fafc !important;
+  border-radius: 8px;
+}
+
+.staff-style-modal .form-control:focus,
+.staff-style-modal .form-select:focus {
+  background-color: rgba(15, 23, 42, 0.8);
+  border-color: #3b82f6;
+  color: #f8fafc;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.staff-style-modal .form-control::placeholder {
+  color: #64748b;
+}
+
+.staff-style-modal .btn-close {
+  filter: invert(1) grayscale(100%) brightness(180%);
+}
+
 /* ============================================
    NAVBAR STYLES
    ============================================ */

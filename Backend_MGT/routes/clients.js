@@ -38,10 +38,12 @@ router.get('/:id', async (req, res) => {
 // POST create client
 router.post('/', async (req, res) => {
   try {
-    const { companyName, contactPerson, email, phone, address } = req.body
+    const companyName = req.body.companyName ?? req.body.company_name
+    const contactPerson = req.body.contactPerson ?? req.body.contact_person
+    const { email, phone, address } = req.body
     
     if (!companyName || !contactPerson || !email || !phone || !address) {
-      return res.status(400).json({ error: 'Missing required fields' })
+      return res.status(400).json({ error: 'companyName, contactPerson, email, phone, and address are required' })
     }
 
     const pool = getPool()
@@ -62,7 +64,13 @@ router.post('/', async (req, res) => {
 // PUT update client
 router.put('/:id', async (req, res) => {
   try {
-    const { companyName, contactPerson, email, phone, address } = req.body
+    const companyName = req.body.companyName ?? req.body.company_name
+    const contactPerson = req.body.contactPerson ?? req.body.contact_person
+    const { email, phone, address } = req.body
+
+    if (!companyName || !contactPerson || !email || !phone || !address) {
+      return res.status(400).json({ error: 'companyName, contactPerson, email, phone, and address are required' })
+    }
     
     const pool = getPool()
     const connection = await pool.getConnection()
