@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS staff (
   status VARCHAR(50) NOT NULL DEFAULT 'Active',
   hireDate DATE,
   department VARCHAR(100),
+  image LONGTEXT NULL,
   createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX idx_role (role),
@@ -145,66 +146,106 @@ CREATE TABLE IF NOT EXISTS suppliers (
   INDEX idx_email (email)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Sample Data for Projects
-INSERT INTO projects (name, client, status, startDate, budget, progress) VALUES
-('Downtown Office Complex', 'ABC Corporation', 'Active', '2024-01-15', 500000, 45),
-('Residential Complex Phase 1', 'XYZ Developers', 'Active', '2024-02-01', 750000, 30),
-('Shopping Mall Renovation', 'Tech Retail Inc', 'Pending', '2024-03-20', 350000, 0),
-('Highway Expansion Project', 'Government Department', 'Active', '2024-01-01', 2000000, 60),
-('Hospital Extension', 'Medical Foundation', 'Completed', '2023-06-15', 1200000, 100);
+-- Audit Logs Table
+CREATE TABLE IF NOT EXISTS audit_logs (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  action VARCHAR(50) NOT NULL,
+  module VARCHAR(100) NOT NULL,
+  description TEXT NOT NULL,
+  performedBy VARCHAR(100) NOT NULL DEFAULT 'Admin User',
+  severity VARCHAR(20) NOT NULL DEFAULT 'info',
+  isRead TINYINT(1) NOT NULL DEFAULT 0,
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_module (module),
+  INDEX idx_severity (severity),
+  INDEX idx_isRead (isRead),
+  INDEX idx_createdAt (createdAt)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Sample Data for Staff
-INSERT INTO staff (name, role, email, phone, salary, status, department) VALUES
-('John Smith', 'Project Manager', 'john.smith@email.com', '555-0101', 75000, 'Active', 'Management'),
-('Sarah Johnson', 'Site Engineer', 'sarah.johnson@email.com', '555-0102', 65000, 'Active', 'Engineering'),
-('Michael Brown', 'Equipment Operator', 'michael.brown@email.com', '555-0103', 45000, 'Active', 'Operations'),
-('Emily Davis', 'Accountant', 'emily.davis@email.com', '555-0104', 55000, 'Active', 'Finance'),
-('Robert Wilson', 'Safety Officer', 'robert.wilson@email.com', '555-0105', 60000, 'Active', 'Safety');
+-- Clean existing sample data (optional reset for fresh import)
+TRUNCATE TABLE projects;
+TRUNCATE TABLE staff;
+TRUNCATE TABLE materials;
+TRUNCATE TABLE equipment;
+TRUNCATE TABLE tasks;
+TRUNCATE TABLE accounting;
+TRUNCATE TABLE clients;
+TRUNCATE TABLE suppliers;
+TRUNCATE TABLE audit_logs;
 
--- Sample Data for Materials
-INSERT INTO materials (name, category, unit, quantity, unitPrice, supplier) VALUES
-('Cement Bags', 'Building Materials', 'Bag', 500, 8.50, 'BuildTech Supplies'),
-('Steel Reinforcement', 'Steel', 'Ton', 100, 850, 'Steel Industries Ltd'),
-('Bricks', 'Masonry', 'Piece', 50000, 0.25, 'Local Brick Manufacturers'),
-('Gravel', 'Aggregates', 'Ton', 200, 35, 'Quarry Supplies Inc'),
-('PVC Pipes', 'Plumbing', 'Meter', 1000, 15, 'Plumbing Solutions Co');
+-- Cambodian Construction Sample Data for Projects
+INSERT INTO projects (name, client, status, startDate, budget, progress, description) VALUES
+('Phnom Penh Tower Extension & Commercial Hub', 'Chip Mong Group Co., Ltd.', 'Active', '2024-01-15', 1500000.00, 45, 'Multi-story commercial extension including 3 basement parking levels and premium retail spaces.'),
+('BKK1 Luxury Condominium Phase 2', 'Worldbridge Land Cambodia', 'Active', '2024-02-01', 2800000.00, 30, 'High-rise residential condominium building with modern facilities in Boeung Keng Kang 1.'),
+('National Road 3 Flyover & Bridge Expansion', 'Ministry of Public Works and Transport (MPWT)', 'Active', '2024-01-01', 4500000.00, 60, 'Infrastructure highway expansion and grade-separated flyover construction in Kandal Province.'),
+('Siem Reap Cultural Resort Complex', 'Sokha Hotel & Resorts', 'Pending', '2024-03-20', 1200000.00, 0, 'Eco-friendly luxury resort complex featuring traditional Khmer architecture and spa amenities.'),
+('Sihanoukville Logistics Port Warehouse', 'Pas Sihanoukville Autonomous Port', 'Active', '2023-11-10', 3200000.00, 75, 'Heavy-duty steel frame logistics warehouse and container yard terminal.'),
+('Kandal Smart Eco-Residential Park', 'Peng Huoth Group', 'Completed', '2023-05-15', 950000.00, 100, 'Gated luxury residential villa housing project featuring solar amenities.');
 
--- Sample Data for Equipment
-INSERT INTO equipment (name, type, serialNumber, status, purchaseDate, cost, location) VALUES
-('Excavator CAT 320', 'Excavator', 'CAT320-2024-001', 'Available', '2023-05-15', 250000, 'Main Site'),
-('Concrete Mixer', 'Mixer', 'MX-2024-001', 'In Use', '2023-08-20', 15000, 'Downtown Project'),
-('Crane JCB 3CX', 'Crane', 'CRANE-2024-001', 'Available', '2023-06-10', 300000, 'Equipment Yard'),
-('Compressor Atlas', 'Compressor', 'COMP-2024-001', 'In Use', '2023-09-01', 8000, 'Highway Project'),
-('Forklift Toyota', 'Forklift', 'FK-2024-001', 'Maintenance', '2024-01-15', 20000, 'Warehouse');
+-- Cambodian Construction Sample Data for Staff
+INSERT INTO staff (name, role, email, phone, salary, status, hireDate, department, image) VALUES
+('Sokha Chan', 'Project Manager', 'sokha.chan@cms.kh', '012 888 901', 1500.00, 'Active', '2022-03-15', 'Management', '/staff_default.png'),
+('Vannak Heng', 'Senior Site Engineer', 'vannak.heng@cms.kh', '017 555 234', 1200.00, 'Active', '2022-06-01', 'Engineering', '/staff_default.png'),
+('Dara Chea', 'Site Supervisor', 'dara.chea@cms.kh', '092 333 456', 900.00, 'Active', '2023-01-10', 'Operations', '/staff_default.png'),
+('Bopha Meng', 'Chief Financial Accountant', 'bopha.meng@cms.kh', '010 444 789', 1100.00, 'Active', '2021-11-20', 'Finance', '/staff_default.png'),
+('Sreyneang Kim', 'Safety & Quality Controller', 'sreyneang.kim@cms.kh', '097 222 111', 850.00, 'Active', '2023-04-05', 'Safety', '/staff_default.png'),
+('Rithy Sovann', 'Heavy Equipment Operator', 'rithy.sovann@cms.kh', '088 666 999', 650.00, 'Active', '2023-08-12', 'Operations', '/staff_default.png');
 
--- Sample Data for Tasks
-INSERT INTO tasks (title, project, assignedTo, status, priority, dueDate, progress) VALUES
-('Foundation work', 'Downtown Office Complex', 'John Smith', 'In Progress', 'High', '2024-04-30', 75),
-('Steel installation', 'Downtown Office Complex', 'Sarah Johnson', 'Not Started', 'High', '2024-05-15', 0),
-('Electrical wiring', 'Residential Complex Phase 1', 'Michael Brown', 'In Progress', 'Medium', '2024-05-01', 50),
-('Safety inspection', 'Highway Expansion Project', 'Robert Wilson', 'Completed', 'Critical', '2024-03-15', 100),
-('Material procurement', 'Shopping Mall Renovation', 'John Smith', 'Not Started', 'Medium', '2024-04-10', 0);
+-- Cambodian Construction Sample Data for Materials
+INSERT INTO materials (name, category, unit, quantity, unitPrice, supplier, description) VALUES
+('K-Cement Portland Type 1', 'Building Materials', 'Bag', 2500, 6.80, 'Kampot Cement Co., Ltd.', 'High grade Portland cement manufactured in Kampot.'),
+('ISI High-Yield TMT Deformed Rebar 16mm', 'Steel', 'Ton', 350, 720.00, 'ISI Steel Cambodia Co., Ltd.', 'High-tensile steel rebar for structural reinforced concrete.'),
+('Kampong Cham Red Clay Bricks', 'Masonry', 'Piece', 120000, 0.08, 'Chhoeung Red Brick Factory', 'Kiln-burned red clay solid bricks for partition walls.'),
+('Kampot Quarry Blue Stone Gravel', 'Aggregates', 'Ton', 800, 22.00, 'Kampot Mining Quarry Co.', 'Crushed blue granite stone 20mm for concrete mix.'),
+('Soma Heavy Duty PVC Drainage Pipe', 'Plumbing', 'Meter', 1500, 8.50, 'Soma Trading & Construction Supply', '110mm UV resistant PVC sewer drainage pipe.'),
+('Phnom Penh Mekong River Sand', 'Aggregates', 'Ton', 1200, 14.00, 'Mekong Sand Dredging Ltd.', 'Washed fine river sand for plastering and concrete.');
 
--- Sample Data for Accounting
-INSERT INTO accounting (date, description, category, type, amount) VALUES
-('2024-02-01', 'Project startup costs', 'Equipment', 'Expense', 50000),
-('2024-02-05', 'Client deposit', 'Revenue', 'Income', 100000),
-('2024-02-10', 'Staff salaries', 'Payroll', 'Expense', 25000),
-('2024-02-15', 'Material purchase', 'Supplies', 'Expense', 15000),
-('2024-02-20', 'Project completion payment', 'Revenue', 'Income', 200000);
+-- Cambodian Construction Sample Data for Equipment
+INSERT INTO equipment (name, type, serialNumber, status, purchaseDate, cost, location, description) VALUES
+('CAT Excavator 320D', 'Excavator', 'CAT320D-KH-2023', 'Available', '2023-04-15', 180000.00, 'BKK1 Site, Phnom Penh', '20-ton crawler excavator with heavy bucket attachment.'),
+('Komatsu PC200 Excavator', 'Excavator', 'KOM-PC200-KH-088', 'In Use', '2023-06-20', 145000.00, 'NR3 Flyover Site, Kandal', 'Hydraulic excavator deployed for earthworks.'),
+('XCMG 50T Mobile Truck Crane', 'Crane', 'XCMG-50T-088-KH', 'Available', '2022-11-10', 210000.00, 'Siem Reap Resort Site', '50-ton telescopic boom truck crane for structural hoisting.'),
+('Sany HBT60 Concrete Trailer Pump', 'Concrete Pump', 'SANY-PUMP-012-KH', 'In Use', '2023-09-01', 65000.00, 'PP Tower Extension Site', 'Stationary trailer concrete pump with high vertical reach.'),
+('JCB 3CX Backhoe Loader', 'Loader', 'JCB-3CX-2022-KH', 'Maintenance', '2022-01-15', 55000.00, 'Central Yard, Pochentong', 'Multipurpose backhoe loader under routine hydraulic service.');
 
--- Sample Data for Clients
-INSERT INTO clients (companyName, contactPerson, email, phone, address, city) VALUES
-('ABC Corporation', 'Mark Wilson', 'mark.wilson@abc.com', '555-0201', '123 Business Ave', 'New York'),
-('XYZ Developers', 'Lisa Chen', 'lisa.chen@xyz.com', '555-0202', '456 Development Blvd', 'Los Angeles'),
-('Tech Retail Inc', 'James Rodriguez', 'james.rodriguez@techretail.com', '555-0203', '789 Commerce St', 'Chicago'),
-('Government Department', 'Patricia Green', 'patricia.green@gov.com', '555-0204', '321 Administration Dr', 'Washington'),
-('Medical Foundation', 'Thomas Martinez', 'thomas.martinez@medfound.com', '555-0205', '654 Healthcare Ln', 'Boston');
+-- Cambodian Construction Sample Data for Tasks
+INSERT INTO tasks (title, project, assignedTo, status, priority, dueDate, progress, description) VALUES
+('Concrete Pouring for B2 Substructure', 'BKK1 Luxury Condominium Phase 2', 'Vannak Heng', 'In Progress', 'High', '2024-05-15', 65, 'Continuous 400m3 concrete pouring for basement raft slab.'),
+('Deep Foundation Piling & Soil Testing', 'Phnom Penh Tower Extension & Commercial Hub', 'Sokha Chan', 'Completed', 'Critical', '2024-04-10', 100, 'Bored pile drilling and ultrasonic pile integrity testing.'),
+('Pre-stressed Concrete Girder Launching', 'National Road 3 Flyover & Bridge Expansion', 'Dara Chea', 'In Progress', 'High', '2024-06-01', 40, 'Positioning 35m pre-cast concrete girders using 100T crane.'),
+('Structural Frame Inspection & Fireproofing', 'Siem Reap Cultural Resort Complex', 'Sreyneang Kim', 'Not Started', 'Medium', '2024-06-20', 0, 'Third-party structural inspection and intumescent coating.'),
+('MEP & Electrical Substation Installation', 'Sihanoukville Logistics Port Warehouse', 'Bopha Meng', 'In Progress', 'Medium', '2024-05-30', 25, 'Main switchboard cable routing and transformer setup.');
 
--- Sample Data for Suppliers
-INSERT INTO suppliers (companyName, contactPerson, email, phone, productCategory) VALUES
-('BuildTech Supplies', 'Kevin Anderson', 'kevin@buildtech.com', '555-0301', 'Building Materials'),
-('Steel Industries Ltd', 'Jennifer Lee', 'jennifer@steelindustries.com', '555-0302', 'Steel'),
-('Local Brick Manufacturers', 'David Kumar', 'david@localbrick.com', '555-0303', 'Masonry'),
-('Quarry Supplies Inc', 'Susan Thompson', 'susan@quarrysupplies.com', '555-0304', 'Aggregates'),
-('Plumbing Solutions Co', 'George Harris', 'george@plumbingsolutions.com', '555-0305', 'Plumbing');
+-- Cambodian Construction Sample Data for Accounting
+INSERT INTO accounting (date, description, category, type, amount, reference, notes) VALUES
+('2024-03-01', 'Initial Mobilization Deposit - PP Tower Project', 'Client Payment', 'Income', 300000.00, 'REC-2024-001', 'First advance milestone payment received via ABA Bank.'),
+('2024-03-05', 'Procurement of 2,500 Bags Kampot Cement', 'Material Purchase', 'Expense', 17000.00, 'INV-KMT-88', 'Direct delivery to Phnom Penh site storehouse.'),
+('2024-03-10', 'Monthly Field Staff & Operator Payroll', 'Payroll', 'Expense', 14500.00, 'PAY-2024-03', 'Monthly staff salaries transfer for March 2024.'),
+('2024-03-15', 'Progress Milestone Billing - NR3 Flyover Phase 1', 'Client Payment', 'Income', 450000.00, 'REC-2024-002', 'MPWT certified completion milestone 1 payment.'),
+('2024-03-20', 'Heavy Equipment Leasing & Diesel Fuel Allocation', 'Equipment & Fuel', 'Expense', 22000.00, 'INV-FUEL-402', 'Diesel fuel supply for excavators and mobile crane fleet.');
+
+-- Cambodian Construction Sample Data for Clients
+INSERT INTO clients (companyName, contactPerson, email, phone, address, city, state, zipCode, taxId) VALUES
+('Chip Mong Group Co., Ltd.', 'Neak Oknha Leang Khun', 'info@chipmong.com', '023 888 999', '#137B, Mao Tse Toung Blvd, Boeung Keng Kang I', 'Phnom Penh', 'Phnom Penh', '12302', 'K001-901823901'),
+('Peng Huoth Group', 'Oknha Thay Chea Huoth', 'contact@penghuoth.com', '023 999 111', '#9, Grand Star Platinum, National Road 1, Chbar Ampov', 'Phnom Penh', 'Phnom Penh', '12354', 'K002-881239102'),
+('Worldbridge Land Cambodia', 'Oknha Sear Rithy', 'sales@worldbridgeland.com.kh', '023 222 333', 'Worldbridge Tower, St 384, Tonle Bassac', 'Phnom Penh', 'Phnom Penh', '12301', 'K003-112938103'),
+('Ministry of Public Works and Transport (MPWT)', 'H.E. Sun Chanthol', 'info@mpwt.gov.kh', '023 427 888', 'Corner St 598 & St 1007, Khan Sen Sok', 'Phnom Penh', 'Phnom Penh', '12101', 'GOV-MPWT-2024'),
+('Sokha Hotel & Resorts', 'Oknha Sok Kong', 'reservation@sokhahotels.com', '063 969 999', 'Road 60, Svay Dangkum', 'Siem Reap', 'Siem Reap', '17252', 'K005-773829105');
+
+-- Cambodian Construction Sample Data for Suppliers
+INSERT INTO suppliers (companyName, contactPerson, email, phone, productCategory, address, city, state, zipCode, taxId) VALUES
+('Kampot Cement Co., Ltd. (K-Cement)', 'Oum Sotha', 'sales@k-cement.com.kh', '023 724 555', 'Building Materials', 'Phnom Penh Tower, Floor 18, Monivong Blvd', 'Phnom Penh', 'Phnom Penh', '12258', 'SUP-KMT-001'),
+('ISI Steel Cambodia Co., Ltd.', 'Kang Leng', 'info@isisteel.com.kh', '023 880 123', 'Steel & Rebar', 'Veng Sreng Street, Choam Chao, Por Senchey', 'Phnom Penh', 'Phnom Penh', '12405', 'SUP-ISI-002'),
+('Kampot Mining Quarry Co.', 'Chem Sovann', 'orders@kampotquarry.kh', '033 968 111', 'Aggregates & Stone', 'National Road 33, Touk Meas', 'Kampot', 'Kampot', '07201', 'SUP-KMQ-003'),
+('Soma Trading & Construction Supply', 'Soma Group', 'supply@soma.com.kh', '023 986 789', 'Plumbing & Electrical', '#2C, Street 289, Boeung Kak 1, Toul Kork', 'Phnom Penh', 'Phnom Penh', '12151', 'SUP-SOM-004'),
+('Umg Cambodia Co., Ltd. (Heavy Machinery)', 'Kheng Sameth', 'machinery@umg.com.kh', '023 428 555', 'Heavy Machinery', 'National Road 4, Phum Chom Chao', 'Phnom Penh', 'Phnom Penh', '12406', 'SUP-UMG-005');
+
+-- Sample Data for Audit Logs & System Notifications
+INSERT INTO audit_logs (action, module, description, performedBy, severity, isRead) VALUES
+('CREATE', 'Equipment', 'CAT Excavator 320D dispatched to Downtown Site B.', 'Admin User', 'info', 0),
+('ALERT', 'Safety', 'Safety Inspection cleared with 0 violations across active sites.', 'Sreyneang Kim', 'success', 0),
+('CREATE', 'Materials', '2,500 Bags Kampot Cement received at Central Warehouse.', 'Dara Chea', 'info', 0),
+('CREATE', 'Accounting', 'Invoiced $300,000.00 client mobilization payment for PP Tower Extension.', 'Bopha Meng', 'success', 1),
+('UPDATE', 'Tasks', 'Updated task progress to 65% on Concrete Pouring B2 Substructure.', 'Vannak Heng', 'info', 1),
+('UPDATE', 'Projects', 'Adjusted budget for National Road 3 Flyover to $4,500,000.00.', 'Admin User', 'warning', 1);
+

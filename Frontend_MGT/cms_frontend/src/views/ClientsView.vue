@@ -1,454 +1,431 @@
 <template>
-  <div class="view-container">
-    <!-- Notifications -->
-    <div 
-      v-if="errorMessage" 
-      class="alert alert-danger alert-dismissible fade show mb-4" 
-      role="alert"
-    >
-      <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ errorMessage }}
-      <button type="button" class="btn-close" @click="errorMessage = ''" aria-label="Close"></button>
-    </div>
-
-    <div 
-      v-if="successMessage" 
-      class="alert alert-success alert-dismissible fade show mb-4" 
-      role="alert"
-    >
-      <i class="bi bi-check-circle-fill me-2"></i>{{ successMessage }}
-      <button type="button" class="btn-close" @click="successMessage = ''" aria-label="Close"></button>
-    </div>
-
+  <div class="module-root">
     <!-- Header -->
-    <div class="view-header mb-4 d-flex justify-content-between align-items-center">
-      <div>
-        <h1 class="page-title mb-1">Clients</h1>
-        <p class="page-subtitle">Manage client profiles and contact information</p>
+    <header class="module-header">
+      <div class="header-left">
+        <div class="breadcrumb-trail">
+          <span class="trail-item">MGM Workspace</span>
+          <span class="trail-sep">/</span>
+          <span class="trail-active">Clients Directory</span>
+        </div>
+        <h1 class="module-title">Client Accounts & Developers</h1>
+        <p class="module-subtitle">Manage client profiles, key representatives, project contracts, and billing contact info.</p>
       </div>
-      <button @click="openAddModal" class="btn btn-primary d-inline-flex align-items-center">
-        <span class="me-2 fw-bold">+</span> Add New Client
-      </button>
+
+      <div class="header-right">
+        <button type="button" @click="load" class="btn-secondary-custom" :disabled="loading">
+          <svg class="refresh-icon" :class="{ spinning: loading }" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M23 4v6h-6"/>
+            <path d="M1 20v-6h6"/>
+            <path d="M3.51 9a9 9 0 0114.85-3.36L23 10"/>
+            <path d="M20.49 15a9 9 0 01-14.85 3.36L1 14"/>
+          </svg>
+          <span>Refresh</span>
+        </button>
+
+        <button type="button" @click="openAddModal" class="btn-primary-custom">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          <span>Add Client</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Top KPI Summary Cards -->
+    <section class="kpi-summary-grid">
+      <div class="kpi-card">
+        <div class="kpi-icon bg-blue"><svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m0 0v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4m-8-11h.01M12 10h.01M16 10h.01M9 14h.01M12 14h.01M16 14h.01"/></svg></div>
+        <div>
+          <div class="kpi-num">{{ items.length }}</div>
+          <div class="kpi-label">Client Companies</div>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon bg-purple"><svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" class="me-1 align-text-bottom"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg></div>
+        <div>
+          <div class="kpi-num">{{ contactPersonCount }}</div>
+          <div class="kpi-label">Contact Personnels</div>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon bg-emerald"><svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg></div>
+        <div>
+          <div class="kpi-num">{{ citiesCount }}</div>
+          <div class="kpi-label">Primary Regions</div>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon bg-amber"><svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5a1 1 0 01.707.293l7 7a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-7-7A1 1 0 016 9V4a1 1 0 011-1z"/></svg></div>
+        <div>
+          <div class="kpi-num">{{ taxIdCount }}</div>
+          <div class="kpi-label">VAT Registered</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Filter & Search Toolbar -->
+    <div class="toolbar-box">
+      <div class="search-input-wrap">
+        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input
+          v-model="searchQuery"
+          type="text"
+          class="search-field"
+          placeholder=""
+        />
+      </div>
     </div>
 
-    <!-- Table Card -->
-    <div class="card shadow-sm border-0">
-      <div class="card-header bg-white py-3">
-        <h5 class="mb-0 fw-semibold text-dark">Clients List</h5>
+    <!-- Main Content Box -->
+    <div class="content-box">
+      <!-- Loading State -->
+      <div v-if="loading" class="state-box">
+        <div class="spinner"></div>
+        <p>Loading client accounts...</p>
       </div>
 
-      <div v-if="loading" class="card-body text-center text-muted py-5">
-        <div class="spinner-border spinner-border-sm me-2" role="status"></div>
-        <span>Loading clients...</span>
-      </div>
-
-      <div v-else-if="items.length" class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-          <thead class="table-light">
+      <!-- Data Table -->
+      <div v-else-if="filteredItems.length > 0" class="table-responsive">
+        <table class="data-table">
+          <thead>
             <tr>
               <th>Company Name</th>
-              <th>Email</th>
-              <th>Phone</th>
-              <th>Address</th>
-              <th class="text-end">Actions</th>
+              <th>Contact Representative</th>
+              <th>Email Address</th>
+              <th>Phone Number</th>
+              <th>Office Location</th>
+              <th>Tax ID / VAT</th>
+              <th class="text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="item in items" :key="item.id">
-              <td><strong>{{ item.companyName }}</strong></td>
+            <tr v-for="item in filteredItems" :key="item.id" class="table-row">
               <td>
-                <a v-if="item.email" :href="`mailto:${item.email}`" class="text-decoration-none text-body">
-                  {{ item.email }}
+                <div class="name-cell">
+                  <div class="company-avatar" :style="getAvatarStyle(item.companyName)">
+                    {{ getInitials(item.companyName) }}
+                  </div>
+                  <div>
+                    <div class="company-name">{{ item.companyName }}</div>
+                    <div class="client-id">CLIENT #CL-{{ String(item.id).padStart(4, '0') }}</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span class="contact-person"><svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" class="me-1 align-text-bottom"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg> {{ item.contactPerson || 'N/A' }}</span>
+              </td>
+              <td>
+                <a v-if="item.email" :href="`mailto:${item.email}`" class="email-link">
+                  <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" class="me-1 align-text-bottom"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg> {{ item.email }}
                 </a>
-                <span v-else class="text-muted">-</span>
+                <span v-else class="text-muted">—</span>
               </td>
-              <td>{{ item.phone || '-' }}</td>
-              <td class="text-truncate" style="max-width: 250px;" :title="item.address">
-                {{ item.address || '-' }}
+              <td>
+                <span class="phone-text"><svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" class="me-1 align-text-bottom"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg> {{ item.phone || 'N/A' }}</span>
               </td>
-              <td class="text-end">
-                <button 
-                  @click="editItem(item)" 
-                  class="btn btn-sm btn-link text-primary text-decoration-none me-2"
-                  :disabled="deletingId === item.id"
-                >
-                  Edit
-                </button>
-                <button 
-                  @click="deleteItem(item.id)" 
-                  class="btn btn-sm btn-link text-danger text-decoration-none"
-                  :disabled="deletingId === item.id"
-                >
-                  <span v-if="deletingId === item.id" class="spinner-border spinner-border-sm me-1"></span>
-                  Delete
-                </button>
+              <td>
+                <span class="address-text" :title="item.address"><svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" class="me-1 align-text-bottom"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg> {{ item.city || 'Phnom Penh' }}</span>
+              </td>
+              <td>
+                <code class="tax-code">{{ item.taxId || 'TAX-REG' }}</code>
+              </td>
+              <td class="text-right">
+                <div class="actions-group">
+                  <button @click="editItem(item)" class="btn-action edit" title="Edit Client"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit</button>
+                  <button @click="deleteItem(item.id)" class="btn-action delete" title="Delete Client"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6"/></svg>Delete</button>
+                </div>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
 
+      <!-- Empty State -->
       <div v-else class="empty-state">
-        <div class="empty-state-icon">📋</div>
-        <p class="empty-state-text mb-0">No records found. Create your first record!</p>
+        <div class="empty-icon"><svg width="40" height="40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m0 0v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4m-8-11h.01M12 10h.01M16 10h.01M9 14h.01M12 14h.01M16 14h.01"/></svg></div>
+        <h3>No Clients Found</h3>
+        <p>No client records match your current search query.</p>
+        <button @click="openAddModal" class="btn-primary-custom">+ Add New Client</button>
       </div>
     </div>
 
-    <!-- Modal Backdrop & Window -->
-    <div 
-      v-if="showAddForm" 
-      ref="modalRef"
-      class="modal fade show d-block staff-style-modal"
-      tabindex="-1" 
-      @click.self="!saving && resetForm()"
-      @keydown.esc="!saving && resetForm()"
-    >
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
-          <div class="modal-header">
-            <h5 class="modal-title fw-semibold">{{ editingId ? 'Edit' : 'New' }} Client</h5>
-            <button type="button" class="btn-close" @click="resetForm" aria-label="Close" :disabled="saving"></button>
+    <!-- Modal Form -->
+    <Teleport to="body">
+      <Transition name="fade">
+        <div v-if="showAddForm" class="modal-backdrop staff-style-modal" @click.self="resetForm">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">{{ editingId ? 'Edit Client Profile' : 'Add Client Account' }}</h5>
+                <button type="button" class="btn-close-white d-flex align-items-center justify-content-center" @click="resetForm"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
+              </div>
+
+              <form @submit.prevent="saveItem">
+                <div class="modal-body">
+                  <div class="form-group mb-3">
+                    <label class="form-label">Company Name *</label>
+                    <input v-model="form.companyName" type="text" class="form-control" placeholder="e.g. Chip Mong Group Co., Ltd." required />
+                  </div>
+
+                  <div class="form-row mb-3">
+                    <div class="col">
+                      <label class="form-label">Contact Person *</label>
+                      <input v-model="form.contactPerson" type="text" class="form-control" placeholder="e.g. Neak Oknha Leang Khun" required />
+                    </div>
+
+                    <div class="col">
+                      <label class="form-label">Tax ID / VAT Registration</label>
+                      <input v-model="form.taxId" type="text" class="form-control" placeholder="e.g. K001-901823901" />
+                    </div>
+                  </div>
+
+                  <div class="form-row mb-3">
+                    <div class="col">
+                      <label class="form-label">Email Address *</label>
+                      <input v-model="form.email" type="email" class="form-control" placeholder="info@chipmong.com" required />
+                    </div>
+
+                    <div class="col">
+                      <label class="form-label">Phone Number *</label>
+                      <input v-model="form.phone" type="text" class="form-control" placeholder="023 888 999" required />
+                    </div>
+                  </div>
+
+                  <div class="form-row mb-3">
+                    <div class="col">
+                      <label class="form-label">City *</label>
+                      <input v-model="form.city" type="text" class="form-control" placeholder="Phnom Penh" required />
+                    </div>
+
+                    <div class="col">
+                      <label class="form-label">Postal / Zip Code</label>
+                      <input v-model="form.zipCode" type="text" class="form-control" placeholder="12302" />
+                    </div>
+                  </div>
+
+                  <div class="form-group mb-3">
+                    <label class="form-label">Street Address *</label>
+                    <textarea v-model="form.address" class="form-control" rows="2" placeholder="e.g. #137B, Mao Tse Toung Blvd, Boeung Keng Kang I" required></textarea>
+                  </div>
+                </div>
+
+                <div class="modal-footer">
+                  <button type="button" class="btn-cancel" @click="resetForm">Cancel</button>
+                  <button type="submit" class="btn-save" :disabled="saving">
+                    {{ saving ? 'Saving...' : 'Save Client' }}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
-          <form @submit.prevent="saveItem" novalidate>
-            <div class="modal-body">
-              <div class="mb-3">
-                <label for="companyName" class="form-label">Company Name <span class="text-danger">*</span></label>
-                <input 
-                  id="companyName"
-                  v-model.trim="form.companyName" 
-                  type="text" 
-                  class="form-control" 
-                  :class="{ 'is-invalid': formErrors.companyName }"
-                  placeholder="e.g. Acme Corporation"
-                  :disabled="saving"
-                />
-                <div v-if="formErrors.companyName" class="invalid-feedback">
-                  {{ formErrors.companyName }}
-                </div>
-              </div>
-
-              <div class="mb-3">
-                <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
-                <input 
-                  id="email"
-                  v-model.trim="form.email" 
-                  type="email" 
-                  class="form-control" 
-                  :class="{ 'is-invalid': formErrors.email }"
-                  placeholder="name@company.com"
-                  required
-                  :disabled="saving"
-                />
-                <div v-if="formErrors.email" class="invalid-feedback">
-                  {{ formErrors.email }}
-                </div>
-              </div>
-
-              <div class="mb-3">
-                <label for="contactPerson" class="form-label">Contact Person <span class="text-danger">*</span></label>
-                <input
-                  id="contactPerson"
-                  v-model.trim="form.contactPerson"
-                  type="text"
-                  class="form-control"
-                  :class="{ 'is-invalid': formErrors.contactPerson }"
-                  placeholder="e.g. Jane Smith"
-                  :disabled="saving"
-                />
-                <div v-if="formErrors.contactPerson" class="invalid-feedback">
-                  {{ formErrors.contactPerson }}
-                </div>
-              </div>
-
-              <div class="mb-3">
-                <label for="phone" class="form-label">Phone <span class="text-danger">*</span></label>
-                <input 
-                  id="phone"
-                  v-model.trim="form.phone" 
-                  type="tel" 
-                  class="form-control" 
-                  placeholder="+1 (555) 000-0000"
-                  required
-                  :disabled="saving"
-                />
-              </div>
-
-              <div class="mb-3">
-                <label for="address" class="form-label">Address <span class="text-danger">*</span></label>
-                <textarea 
-                  id="address"
-                  v-model.trim="form.address" 
-                  class="form-control" 
-                  rows="3"
-                  placeholder="Street address, city, state, zip code"
-                  required
-                  :disabled="saving"
-                ></textarea>
-              </div>
-            </div>
-
-            <div class="modal-footer bg-light">
-              <button 
-                type="button" 
-                class="btn btn-outline-secondary" 
-                @click="resetForm" 
-                :disabled="saving"
-              >
-                Cancel
-              </button>
-              <button type="submit" class="btn btn-primary" :disabled="saving">
-                <span v-if="saving" class="spinner-border spinner-border-sm me-1" role="status"></span>
-                {{ saving ? 'Saving...' : (editingId ? 'Update Client' : 'Save Client') }}
-              </button>
-            </div>
-          </form>
         </div>
-      </div>
-    </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { clientsApi } from '../services/api'
 
-// State management
 const items = ref([])
 const loading = ref(false)
 const saving = ref(false)
-const deletingId = ref(null)
 const showAddForm = ref(false)
 const editingId = ref(null)
-const modalRef = ref(null)
+const searchQuery = ref('')
 
-// Feedback messages
-const errorMessage = ref('')
-const successMessage = ref('')
-
-// Form state & validations
-const initialForm = {
+const initialFormState = () => ({
   companyName: '',
   contactPerson: '',
   email: '',
   phone: '',
-  address: ''
-}
-
-const form = ref({ ...initialForm })
-const formErrors = reactive({
-  companyName: '',
-  contactPerson: '',
-  email: '',
-  phone: '',
-  address: ''
+  address: '',
+  city: 'Phnom Penh',
+  state: 'Phnom Penh',
+  zipCode: '12000',
+  taxId: ''
 })
 
-// Enhanced helper to extract detailed API error messages
-const handleApiError = (error, defaultMsg) => {
-  console.error('Backend Error Response:', error.response?.data)
-  const data = error.response?.data
-  if (!data) return defaultMsg
+const form = ref(initialFormState())
 
-  // Handles express-validator style error arrays: [{ msg: "..." }, ...]
-  if (Array.isArray(data.errors)) {
-    return data.errors.map(e => e.msg || e.message).join(' | ')
-  }
+const contactPersonCount = computed(() => items.value.filter(i => i.contactPerson).length)
+const citiesCount = computed(() => new Set(items.value.map(i => i.city).filter(Boolean)).size)
+const taxIdCount = computed(() => items.value.filter(i => i.taxId).length)
 
-  return data.message || data.error || defaultMsg
-}
+const filteredItems = computed(() => {
+  return items.value.filter(item => {
+    const query = searchQuery.value.toLowerCase()
+    return !query ||
+      (item.companyName || '').toLowerCase().includes(query) ||
+      (item.contactPerson || '').toLowerCase().includes(query) ||
+      (item.city || '').toLowerCase().includes(query) ||
+      (item.taxId || '').toLowerCase().includes(query)
+  })
+})
 
-// Format payload: convert empty strings to null & include snake_case keys for compatibility
-const preparePayload = (formData) => {
-  const companyName = formData.companyName?.trim() || ''
-  const contactPerson = formData.contactPerson?.trim() || ''
-  const email = formData.email?.trim() || null
-  const phone = formData.phone?.trim() || null
-  const address = formData.address?.trim() || null
-
-  return {
-    companyName,
-    contactPerson,
-    email,
-    phone,
-    address
-  }
-}
-
-// Clear active messages
-const clearMessages = () => {
-  errorMessage.value = ''
-  successMessage.value = ''
-}
-
-// Load Clients List
 const load = async () => {
   loading.value = true
   try {
-    const response = await clientsApi.getAll()
-    items.value = response.data?.data || response.data || []
-  } catch (error) {
-    errorMessage.value = handleApiError(error, 'Failed to fetch clients from server.')
+    const res = await clientsApi.getAll()
+    if (Array.isArray(res?.data)) {
+      items.value = res.data
+    }
+  } catch (err) {
+    console.error('Failed to load clients:', err)
   } finally {
     loading.value = false
   }
 }
 
-// Client-side Validation
-const validateForm = () => {
-  let isValid = true
-  formErrors.companyName = ''
-  formErrors.contactPerson = ''
-  formErrors.email = ''
-  formErrors.phone = ''
-  formErrors.address = ''
-
-  if (!form.value.companyName) {
-    formErrors.companyName = 'Company Name is required.'
-    isValid = false
-  }
-
-  if (!form.value.contactPerson) {
-    formErrors.contactPerson = 'Contact Person is required.'
-    isValid = false
-  }
-
-  if (!form.value.email) {
-    formErrors.email = 'Email is required.'
-    isValid = false
-  } else {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(form.value.email)) {
-      formErrors.email = 'Please enter a valid email address.'
-      isValid = false
-    }
-  }
-
-  if (!form.value.phone) {
-    formErrors.phone = 'Phone is required.'
-    isValid = false
-  }
-
-  if (!form.value.address) {
-    formErrors.address = 'Address is required.'
-    isValid = false
-  }
-
-  return isValid
+const openAddModal = () => {
+  editingId.value = null
+  form.value = initialFormState()
+  showAddForm.value = true
 }
 
-const openAddModal = async () => {
-  clearMessages()
-  resetForm()
+const editItem = (item) => {
+  editingId.value = item.id
+  form.value = {
+    companyName: item.companyName || '',
+    contactPerson: item.contactPerson || '',
+    email: item.email || '',
+    phone: item.phone || '',
+    address: item.address || '',
+    city: item.city || 'Phnom Penh',
+    state: item.state || 'Phnom Penh',
+    zipCode: item.zipCode || '12000',
+    taxId: item.taxId || ''
+  }
   showAddForm.value = true
-  await nextTick()
-  modalRef.value?.focus() // enables the Esc key handler
 }
 
 const saveItem = async () => {
-  clearMessages()
-  if (!validateForm()) return
-
   saving.value = true
-  const payload = preparePayload(form.value)
-
   try {
+    const payload = { ...form.value }
     if (editingId.value) {
       await clientsApi.update(editingId.value, payload)
-      successMessage.value = 'Client updated successfully.'
     } else {
       await clientsApi.create(payload)
-      successMessage.value = 'Client created successfully.'
     }
-    // Close the modal only after the save actually succeeded
     resetForm()
     await load()
-  } catch (error) {
-    errorMessage.value = handleApiError(error, 'Failed to save client details.')
-    // Modal stays open so the user sees the error and can retry
+  } catch (err) {
+    console.error('Failed to save client:', err)
+    alert('Failed to save client account.')
   } finally {
     saving.value = false
   }
 }
 
-const editItem = async (item) => {
-  clearMessages()
-  editingId.value = item.id
-  form.value = { 
-    companyName: item.companyName || item.company_name || '',
-    contactPerson: item.contactPerson || item.contact_person || '',
-    email: item.email || '',
-    phone: item.phone || '',
-    address: item.address || ''
-  }
-  showAddForm.value = true
-  await nextTick()
-  modalRef.value?.focus()
-}
-
 const deleteItem = async (id) => {
-  clearMessages()
-  if (confirm('Are you sure you want to delete this client? This action cannot be undone.')) {
-    deletingId.value = id
-    try {
-      await clientsApi.delete(id)
-      successMessage.value = 'Client deleted successfully.'
-      await load()
-    } catch (error) {
-      errorMessage.value = handleApiError(error, 'Failed to delete client.')
-    } finally {
-      deletingId.value = null
-    }
+  if (!confirm('Are you sure you want to delete this client account?')) return
+  try {
+    await clientsApi.delete(id)
+    await load()
+  } catch (err) {
+    console.error('Failed to delete client:', err)
+    alert('Failed to delete client.')
   }
 }
 
 const resetForm = () => {
-  editingId.value = null
   showAddForm.value = false
-  form.value = { ...initialForm }
-  formErrors.companyName = ''
-  formErrors.contactPerson = ''
-  formErrors.email = ''
-  formErrors.phone = ''
-  formErrors.address = ''
+  editingId.value = null
+  form.value = initialFormState()
+}
+
+const getInitials = (name = '') => {
+  return name.split(' ').map(n => n.charAt(0)).join('').toUpperCase().substring(0, 2) || 'CL'
+}
+
+const getAvatarStyle = (name = '') => {
+  const colors = [
+    { background: 'linear-gradient(135deg, #2563eb, #1d4ed8)', color: '#fff' },
+    { background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)', color: '#fff' },
+    { background: 'linear-gradient(135deg, #10b981, #047857)', color: '#fff' },
+    { background: 'linear-gradient(135deg, #f59e0b, #b45309)', color: '#fff' }
+  ]
+  return colors[name.length % colors.length]
 }
 
 onMounted(load)
 </script>
 
 <style scoped>
-.view-container {
-  padding: 0;
-}
+.module-root { width: 100%; max-width: 1600px; margin: 0 auto; padding: 16px 20px 48px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #0f172a; }
+.module-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; gap: 16px; flex-wrap: wrap; }
+.breadcrumb-trail { display: flex; gap: 8px; font-size: 13px; color: #64748b; margin-bottom: 4px; }
+.trail-active { color: #2563eb; font-weight: 600; }
+.module-title { font-size: 26px; font-weight: 800; margin: 0; color: #0f172a; }
+.module-subtitle { font-size: 13.5px; color: #64748b; margin: 4px 0 0; }
+.header-right { display: flex; gap: 10px; }
 
-.view-header {
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
-}
+.btn-secondary-custom { display: inline-flex; align-items: center; gap: 8px; padding: 9px 15px; background: #fff; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 13px; font-weight: 600; color: #334155; cursor: pointer; }
+.btn-primary-custom { display: inline-flex; align-items: center; gap: 8px; padding: 9px 18px; background: linear-gradient(135deg, #2563eb, #1d4ed8); border: none; border-radius: 10px; font-size: 13px; font-weight: 600; color: #fff; cursor: pointer; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25); }
 
-.page-title {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: #111827;
-  margin: 0;
-}
+.kpi-summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 20px; }
+.kpi-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 16px 18px; display: flex; align-items: center; gap: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+.kpi-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+.bg-blue { background: #dbeafe; } .bg-purple { background: #ede9fe; } .bg-emerald { background: #d1fae5; } .bg-amber { background: #fef3c7; }
+.kpi-num { font-size: 22px; font-weight: 800; color: #0f172a; line-height: 1.1; }
+.kpi-label { font-size: 12px; color: #64748b; margin-top: 2px; }
 
-.page-subtitle {
-  font-size: 0.875rem;
-  color: #6b7280;
-  margin: 0;
-}
+.toolbar-box { display: flex; justify-content: space-between; align-items: center; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 16px; margin-bottom: 20px; gap: 16px; flex-wrap: wrap; }
+.search-input-wrap { display: flex; align-items: center; gap: 8px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 7px 12px; flex-grow: 1; max-width: 480px; }
+.search-icon { color: #94a3b8; }
+.search-field { border: none; background: transparent; font-size: 13px; outline: none; width: 100%; }
 
-.empty-state {
-  padding: 3rem 1rem;
-  text-align: center;
-}
+.content-box { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+.table-responsive { overflow-x: auto; }
+.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.data-table th { text-align: left; padding: 12px 14px; color: #64748b; font-size: 11.5px; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; background: #f8fafc; }
+.data-table td { padding: 14px 14px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
 
-.empty-state-icon {
-  font-size: 2.5rem;
-  margin-bottom: 0.75rem;
-}
+.name-cell { display: flex; align-items: center; gap: 12px; }
+.company-avatar { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; flex-shrink: 0; }
+.company-name { font-weight: 700; color: #0f172a; }
+.client-id { font-size: 11px; color: #94a3b8; }
 
-.empty-state-text {
-  color: #6b7280;
-  font-size: 0.95rem;
-}
+.contact-person { font-weight: 600; color: #334155; }
+.email-link { color: #2563eb; text-decoration: none; font-weight: 500; }
+.email-link:hover { text-decoration: underline; }
+.phone-text { color: #475569; font-weight: 500; }
+.address-text { font-size: 12px; color: #64748b; }
+.tax-code { font-family: monospace; font-size: 11.5px; background: #f8fafc; color: #0f172a; padding: 2px 6px; border-radius: 4px; border: 1px solid #e2e8f0; }
+
+.actions-group { display: flex; gap: 6px; justify-content: flex-end; }
+.btn-action { border: 1px solid #e2e8f0; background: #fff; padding: 4px 9px; border-radius: 6px; font-size: 11.5px; font-weight: 600; cursor: pointer; }
+.btn-action.edit:hover { background: #eff6ff; color: #2563eb; border-color: #bfdbfe; }
+.btn-action.delete:hover { background: #fff1f2; color: #e11d48; border-color: #fecdd3; }
+.text-right { text-align: right; }
+
+.modal-backdrop { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); z-index: 1050; display: flex; align-items: center; justify-content: center; }
+.modal-dialog { width: min(100% - 2rem, 520px); }
+.modal-content { background: #1e293b; color: #f8fafc; border-radius: 14px; border: 1px solid rgba(255,255,255,0.1); padding: 20px; }
+.modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; margin-bottom: 16px; }
+.modal-title { font-size: 17px; font-weight: 700; color: #fff; margin: 0; }
+.btn-close-white { background: transparent; border: none; color: #94a3b8; font-size: 18px; cursor: pointer; }
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-row { display: flex; gap: 12px; }
+.form-row .col { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+.form-label { font-size: 12px; font-weight: 600; color: #cbd5e1; }
+.form-control { background: #0f172a; border: 1px solid #334155; color: #fff; padding: 9px 12px; border-radius: 8px; font-size: 13px; outline: none; }
+.form-control:focus { border-color: #3b82f6; }
+.modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.1); }
+.btn-cancel { background: transparent; border: 1px solid #475569; color: #cbd5e1; padding: 8px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; }
+.btn-save { background: #2563eb; border: none; color: #fff; padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+
+.state-box, .empty-state { text-align: center; padding: 40px; color: #64748b; }
+.spinner { width: 24px; height: 24px; border: 3px solid #e2e8f0; border-top-color: #2563eb; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 10px; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 </style>

@@ -1,11 +1,12 @@
-```vue
 <template>
   <div class="app-container">
 
     <!-- Sidebar -->
     <Sidebar
       :is-open="isSidebarOpen"
+      :is-collapsed="isSidebarCollapsed"
       @close="isSidebarOpen = false"
+      @toggle-collapse="isSidebarCollapsed = !isSidebarCollapsed"
     />
 
     <!-- Mobile Backdrop -->
@@ -20,13 +21,11 @@
     <!-- Application Content -->
     <div
       class="app-content"
-      :class="{ 'sidebar-collapsed': !isSidebarOpen }"
+      :class="{ 'sidebar-collapsed': isSidebarCollapsed }"
     >
 
       <!-- Navbar -->
-      <Navbar
-        @toggle-sidebar="toggleSidebar"
-      />
+      <Navbar />
 
       <!-- Main Content -->
       <main class="app-main">
@@ -40,15 +39,16 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import Navbar from './components/navbar.vue'
 import Sidebar from './components/sidebar.vue'
 
 const isSidebarOpen = ref(true)
+const isSidebarCollapsed = ref(localStorage.getItem('sidebar_collapsed') === 'true')
 
-const toggleSidebar = () => {
-  isSidebarOpen.value = !isSidebarOpen.value
-}
+watch(isSidebarCollapsed, (newVal) => {
+  localStorage.setItem('sidebar_collapsed', newVal.toString())
+})
 </script>
 
 <style scoped>
@@ -85,8 +85,8 @@ const toggleSidebar = () => {
   background: #f5f7fb;
 
   transition:
-    width 0.3s ease,
-    margin-left 0.3s ease;
+    width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
   position: relative;
 }
@@ -97,8 +97,8 @@ const toggleSidebar = () => {
 ========================================================= */
 
 .app-content.sidebar-collapsed {
-  width: 100%;
-  margin-left: 0;
+  width: calc(100% - 76px);
+  margin-left: 76px;
 }
 
 
@@ -202,8 +202,8 @@ const toggleSidebar = () => {
   }
 
   .app-content.sidebar-collapsed {
-    width: 100%;
-    margin-left: 0;
+    width: calc(100% - 76px);
+    margin-left: 76px;
   }
 
   .app-main {
@@ -316,4 +316,3 @@ const toggleSidebar = () => {
 }
 
 </style>
-```
