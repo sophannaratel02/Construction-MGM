@@ -2,7 +2,7 @@
 
 ## ✅ What's Been Completed
 
-✓ Frontend with Vue.js 3, Tailwind CSS, and Vite
+✓ Frontend with Vue.js 3, Bootstrap 5, and Vite
 ✓ All 9 management pages (Dashboard, Projects, Staff, Materials, Equipment, Tasks, Accounting, Clients, Suppliers)
 ✓ Responsive sidebar navigation
 ✓ Backend Node.js/Express API with CORS
@@ -137,7 +137,6 @@ Project Root
 │   │   └── router/index.js    ← Route configuration
 │   ├── package.json           ← Dependencies
 │   ├── vite.config.js         ← Build configuration
-│   ├── tailwind.config.js     ← Tailwind customization
 │   └── README.md              ← Frontend documentation
 │
 └── README.md                  ← Main documentation
@@ -329,7 +328,7 @@ npm run preview          # Preview production build
 **Frontend:**
 - Vue.js 3 - Progressive JavaScript framework
 - Vite - Modern build tool
-- Tailwind CSS - Utility-first CSS framework
+- Bootstrap 5 - Popular CSS framework for responsive design
 - Axios - HTTP client
 - Vue Router - Client-side routing
 - Pinia - State management
@@ -347,7 +346,7 @@ npm run preview          # Preview production build
 
 1. ✅ Complete the setup above
 2. ✅ Test all features in the UI
-3. 📝 Customize styling (colors, fonts) in `tailwind.config.js`
+3. 📝 Customize styling (colors, fonts) in `src/assets/style.css`
 4. 🔐 Implement authentication for production
 5. 📱 Optimize for mobile deployment
 6. 🚀 Deploy to production server

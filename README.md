@@ -14,7 +14,7 @@ Construction Management System/
 │       │   ├── router/              # Vue Router configuration
 │       │   ├── services/            # API client (api.js)
 │       │   ├── stores/              # Pinia store
-│       │   └── assets/              # Tailwind CSS
+│       │   └── assets/              # Bootstrap 5
 │       ├── package.json
 │       └── vite.config.js
 └── Backend_MGT/                     # Node.js Backend Application
@@ -215,7 +215,7 @@ All tables include timestamps and appropriate indexes for performance.
 - **Vite** - Next-generation build tool
 - **Vue Router** - Client-side routing
 - **Pinia** - State management
-- **Tailwind CSS** - Utility-first CSS framework
+- **Bootstrap 5** - Powerful CSS framework for responsive design
 - **Axios** - HTTP client
 
 ### Backend

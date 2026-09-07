@@ -1,6 +1,6 @@
 # Construction Management System - Frontend
 
-Vue.js 3 + Vite + Tailwind CSS frontend for the Construction Management System
+Vue.js 3 + Vite + Bootstrap 5 frontend for the Construction Management System
 
 ## 🚀 Setup Instructions
 
@@ -72,12 +72,11 @@ await projectsApi.update(id, data)
 await projectsApi.delete(id)
 ```
 
-## 🎨 Styling with Tailwind CSS
+## 🎨 Styling with Bootstrap 5
 
-The project uses Tailwind CSS for styling. Tailwind is configured in:
-- `tailwind.config.js` - Theme customization
-- `postcss.config.js` - CSS processing
-- `src/assets/style.css` - Tailwind directives
+The project uses Bootstrap 5 for styling. Bootstrap is included in:
+- `src/main.js` - Bootstrap import
+- `src/assets/style.css` - Custom styles and overrides
 
 ## 🔧 Development
 
@@ -100,7 +99,7 @@ The dev server automatically reloads when you save changes.
 - `vue-router` - Routing
 - `pinia` - State management
 - `axios` - HTTP client
-- `tailwindcss` - CSS framework
+- `bootstrap` - CSS framework
 - `vite` - Build tool
 
 ## 🚨 Troubleshooting
@@ -120,4 +119,4 @@ const API_BASE_URL = 'http://localhost:3000/api'
 
 - Vue.js: https://vuejs.org
 - Vite: https://vitejs.dev
-- Tailwind CSS: https://tailwindcss.com
+- Bootstrap: https://getbootstrap.com
