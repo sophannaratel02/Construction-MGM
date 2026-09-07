@@ -267,6 +267,9 @@
 import { ref, computed, onMounted } from 'vue'
 import { tasksApi } from '../services/api'
 import CustomDatePicker from '../components/CustomDatePicker.vue'
+import { useAlert } from '../composables/useAlert'
+
+const { showSuccess, showError } = useAlert()
 
 const items = ref([])
 const loading = ref(false)
@@ -343,6 +346,8 @@ const editItem = (item) => {
 const saveItem = async () => {
   saving.value = true
   try {
+    const isEditing = Boolean(editingId.value)
+    const taskTitle = form.value.title || 'Task'
     const payload = { ...form.value }
     if (editingId.value) {
       await tasksApi.update(editingId.value, payload)
@@ -351,9 +356,15 @@ const saveItem = async () => {
     }
     resetForm()
     await loadTasks()
+    showSuccess(
+      isEditing
+        ? `Task "${taskTitle}" has been updated successfully.`
+        : `Task "${taskTitle}" has been created successfully.`,
+      isEditing ? 'Task Updated' : 'Task Created'
+    )
   } catch (err) {
     console.error('Failed to save task:', err)
-    alert('Failed to save task record.')
+    showError(err?.response?.data?.message || 'Failed to save task record.')
   } finally {
     saving.value = false
   }
@@ -364,9 +375,10 @@ const deleteItem = async (id) => {
   try {
     await tasksApi.delete(id)
     await loadTasks()
+    showSuccess('Task has been deleted successfully.', 'Task Removed')
   } catch (err) {
     console.error('Failed to delete task:', err)
-    alert('Failed to delete task.')
+    showError(err?.response?.data?.message || 'Failed to delete task.')
   }
 }
 

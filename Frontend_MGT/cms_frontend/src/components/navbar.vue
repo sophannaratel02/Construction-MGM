@@ -170,6 +170,9 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { auditLogsApi } from '../services/api'
+import { useAlert } from '../composables/useAlert'
+
+const { showInfo } = useAlert()
 
 defineEmits(['toggle-sidebar'])
 
@@ -238,7 +241,7 @@ const toggleUserMenu = () => {
 
 const handleLogout = () => {
   showUserMenu.value = false
-  alert('You have logged out of MGM Command System.')
+  showInfo('You have logged out of MGM Command System.', 'Logged Out')
 }
 
 // Global keyboard shortcut for Cmd/Ctrl+K

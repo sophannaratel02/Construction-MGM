@@ -240,6 +240,9 @@
 import { ref, computed, onMounted } from 'vue'
 import { accountingApi } from '../services/api'
 import CustomDatePicker from '../components/CustomDatePicker.vue'
+import { useAlert } from '../composables/useAlert'
+
+const { showSuccess, showError } = useAlert()
 
 const items = ref([])
 const loading = ref(false)
@@ -322,6 +325,8 @@ const editItem = (item) => {
 const saveItem = async () => {
   saving.value = true
   try {
+    const isEditing = Boolean(editingId.value)
+    const desc = form.value.description || 'Transaction'
     const payload = { ...form.value }
     if (editingId.value) {
       await accountingApi.update(editingId.value, payload)
@@ -330,9 +335,15 @@ const saveItem = async () => {
     }
     resetForm()
     await load()
+    showSuccess(
+      isEditing
+        ? `Transaction "${desc}" updated successfully.`
+        : `Transaction "${desc}" recorded successfully.`,
+      isEditing ? 'Transaction Updated' : 'Transaction Recorded'
+    )
   } catch (err) {
     console.error('Failed to save transaction:', err)
-    alert('Failed to save financial entry.')
+    showError(err?.response?.data?.message || 'Failed to save financial entry.')
   } finally {
     saving.value = false
   }
@@ -343,9 +354,10 @@ const deleteItem = async (id) => {
   try {
     await accountingApi.delete(id)
     await load()
+    showSuccess('Financial transaction deleted successfully.', 'Transaction Removed')
   } catch (err) {
     console.error('Failed to delete transaction:', err)
-    alert('Failed to delete transaction.')
+    showError(err?.response?.data?.message || 'Failed to delete transaction.')
   }
 }
 

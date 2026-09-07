@@ -244,6 +244,9 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { materialsApi } from '../services/api'
+import { useAlert } from '../composables/useAlert'
+
+const { showSuccess, showError } = useAlert()
 
 const items = ref([])
 const loading = ref(false)
@@ -327,6 +330,8 @@ const editItem = (item) => {
 const saveItem = async () => {
   saving.value = true
   try {
+    const isEditing = Boolean(editingId.value)
+    const matName = form.value.name || 'Material'
     const payload = { ...form.value }
     if (editingId.value) {
       await materialsApi.update(editingId.value, payload)
@@ -335,9 +340,15 @@ const saveItem = async () => {
     }
     resetForm()
     await load()
+    showSuccess(
+      isEditing
+        ? `Material "${matName}" updated successfully.`
+        : `Material "${matName}" added to inventory successfully.`,
+      isEditing ? 'Material Updated' : 'Material Added'
+    )
   } catch (err) {
     console.error('Failed to save material:', err)
-    alert('Failed to save material record.')
+    showError(err?.response?.data?.message || 'Failed to save material record.')
   } finally {
     saving.value = false
   }
@@ -348,9 +359,10 @@ const deleteItem = async (id) => {
   try {
     await materialsApi.delete(id)
     await load()
+    showSuccess('Material removed from inventory.', 'Material Deleted')
   } catch (err) {
     console.error('Failed to delete material:', err)
-    alert('Failed to delete material.')
+    showError(err?.response?.data?.message || 'Failed to delete material.')
   }
 }
 

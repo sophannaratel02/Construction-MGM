@@ -308,6 +308,9 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { staffApi } from '../services/api'
+import { useAlert } from '../composables/useAlert'
+
+const { showSuccess, showError, showWarning } = useAlert()
 
 const items = ref([])
 const loading = ref(false)
@@ -387,6 +390,8 @@ const editItem = (item) => {
 const saveItem = async () => {
   saving.value = true
   try {
+    const isEditing = Boolean(editingId.value)
+    const staffName = form.value.name || 'Staff Member'
     const payload = { ...form.value }
     if (editingId.value) {
       await staffApi.update(editingId.value, payload)
@@ -395,9 +400,15 @@ const saveItem = async () => {
     }
     resetForm()
     await loadStaff()
+    showSuccess(
+      isEditing
+        ? `Staff profile for "${staffName}" updated successfully.`
+        : `Staff member "${staffName}" added successfully.`,
+      isEditing ? 'Profile Updated' : 'Staff Member Added'
+    )
   } catch (err) {
     console.error('Failed to save staff record:', err)
-    alert('Failed to save staff record.')
+    showError(err?.response?.data?.message || 'Failed to save staff record.')
   } finally {
     saving.value = false
   }
@@ -408,9 +419,10 @@ const deleteItem = async (id) => {
   try {
     await staffApi.delete(id)
     await loadStaff()
+    showSuccess('Staff member removed successfully.', 'Staff Deleted')
   } catch (err) {
     console.error('Failed to delete staff:', err)
-    alert('Failed to delete staff.')
+    showError(err?.response?.data?.message || 'Failed to delete staff.')
   }
 }
 
@@ -418,7 +430,7 @@ const onFileSelected = (event) => {
   const file = event.target.files[0]
   if (!file) return
   if (file.size > 5 * 1024 * 1024) {
-    alert('Image size exceeds 5MB limit.')
+    showWarning('Image size exceeds 5MB limit. Please choose a smaller file.', 'File Too Large')
     return
   }
   const reader = new FileReader()

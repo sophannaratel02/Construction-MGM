@@ -242,19 +242,17 @@
                       <label class="form-label-custom">
                         Start Date <span class="text-danger-custom">*</span>
                       </label>
-                      <input
+                      <CustomDatePicker
                         v-model="form.startDate"
-                        type="date"
-                        class="form-control-custom date-input-custom"
+                        placeholder="YYYY-MM-DD"
                         required
                       />
                     </div>
                     <div class="col-md-6">
                       <label class="form-label-custom">End Date</label>
-                      <input
+                      <CustomDatePicker
                         v-model="form.endDate"
-                        type="date"
-                        class="form-control-custom date-input-custom"
+                        placeholder="YYYY-MM-DD"
                       />
                     </div>
                   </div>
@@ -325,6 +323,10 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { projectsApi } from '../services/api'
+import { useAlert } from '../composables/useAlert'
+import CustomDatePicker from '../components/CustomDatePicker.vue'
+
+const { showSuccess, showError, showWarning } = useAlert()
 
 /* State */
 const projects = ref([])
@@ -389,9 +391,18 @@ const closeForm = () => {
 
 const saveProject = async () => {
   if (saving.value) return
+
+  if (!form.value.startDate) {
+    showWarning('Please select a valid start date for the project.', 'Start Date Required')
+    return
+  }
+
   saving.value = true
 
   try {
+    const isEditing = Boolean(editingId.value)
+    const projectName = form.value.name || 'Project'
+
     const payload = {
       name: form.value.name,
       client: form.value.client,
@@ -416,9 +427,16 @@ const saveProject = async () => {
 
     // Reload directory data
     await loadProjects()
+
+    showSuccess(
+      isEditing
+        ? `Project "${projectName}" has been updated successfully.`
+        : `Project "${projectName}" has been created successfully.`,
+      isEditing ? 'Project Updated' : 'Project Created'
+    )
   } catch (error) {
     console.error('Failed to save project:', error)
-    alert(error?.response?.data?.message || 'Failed to save project. Please try again.')
+    showError(error?.response?.data?.message || 'Failed to save project. Please try again.')
   } finally {
     saving.value = false
   }
@@ -443,7 +461,7 @@ const editProject = (project) => {
 
 const deleteProject = async (id) => {
   if (!id) {
-    alert('Project ID is missing.')
+    showWarning('Project ID is missing.', 'Warning')
     return
   }
 
@@ -452,9 +470,10 @@ const deleteProject = async (id) => {
   try {
     await projectsApi.delete(id)
     await loadProjects()
+    showSuccess('Project has been removed successfully.', 'Project Deleted')
   } catch (error) {
     console.error('Failed to delete project:', error)
-    alert(error?.response?.data?.message || 'Failed to delete project. Please try again.')
+    showError(error?.response?.data?.message || 'Failed to delete project. Please try again.')
   }
 }
 

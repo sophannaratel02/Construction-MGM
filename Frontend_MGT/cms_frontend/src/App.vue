@@ -35,6 +35,9 @@
       </main>
 
     </div>
+
+    <!-- Global Project-Matched Alert Toast Notifications -->
+    <AlertToast />
   </div>
 </template>
 
@@ -42,6 +45,7 @@
 import { ref, watch } from 'vue'
 import Navbar from './components/navbar.vue'
 import Sidebar from './components/sidebar.vue'
+import AlertToast from './components/AlertToast.vue'
 
 const isSidebarOpen = ref(true)
 const isSidebarCollapsed = ref(localStorage.getItem('sidebar_collapsed') === 'true')
