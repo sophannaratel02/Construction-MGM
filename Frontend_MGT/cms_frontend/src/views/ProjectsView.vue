@@ -163,10 +163,10 @@
           @click.self="closeForm"
         >
           <div class="modal-dialog-custom">
-            <div class="modal-content shadow-lg">
+            <div class="modal-content-custom">
               <!-- Modal Header -->
-              <div class="modal-header px-4 py-3 border-bottom">
-                <h5 class="modal-title fw-semibold text-dark fs-6 mb-0">
+              <div class="modal-header-custom">
+                <h5 class="modal-title-custom">
                   {{ editingId ? 'Edit Project' : 'Create New Project' }}
                 </h5>
                 <button
@@ -175,35 +175,37 @@
                   @click="closeForm"
                   aria-label="Close"
                 >
-                  &times;
+                  <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
                 </button>
               </div>
 
               <!-- Modal Form -->
               <form @submit.prevent="saveProject">
-                <div class="modal-body p-4">
+                <div class="modal-body-custom">
                   <!-- Name & Client -->
                   <div class="row g-3 mb-3">
                     <div class="col-md-6">
                       <label class="form-label-custom">
-                        Project Name <span class="text-danger">*</span>
+                        Project Name <span class="text-danger-custom">*</span>
                       </label>
                       <input
                         v-model.trim="form.name"
                         type="text"
-                        class="form-control form-control-custom"
+                        class="form-control-custom"
                         placeholder="e.g. Skyline Tower"
                         required
                       />
                     </div>
                     <div class="col-md-6">
                       <label class="form-label-custom">
-                        Client <span class="text-danger">*</span>
+                        Client <span class="text-danger-custom">*</span>
                       </label>
                       <input
                         v-model.trim="form.client"
                         type="text"
-                        class="form-control form-control-custom"
+                        class="form-control-custom"
                         placeholder="e.g. Acme Corp"
                         required
                       />
@@ -214,7 +216,7 @@
                   <div class="row g-3 mb-3">
                     <div class="col-md-6">
                       <label class="form-label-custom">Status</label>
-                      <select v-model="form.status" class="form-select form-control-custom">
+                      <select v-model="form.status" class="form-control-custom form-select-custom">
                         <option value="Active">Active</option>
                         <option value="Pending">Pending</option>
                         <option value="Completed">Completed</option>
@@ -228,7 +230,7 @@
                         type="number"
                         min="0"
                         max="100"
-                        class="form-control form-control-custom"
+                        class="form-control-custom"
                         placeholder="0 - 100"
                       />
                     </div>
@@ -238,12 +240,12 @@
                   <div class="row g-3 mb-3">
                     <div class="col-md-6">
                       <label class="form-label-custom">
-                        Start Date <span class="text-danger">*</span>
+                        Start Date <span class="text-danger-custom">*</span>
                       </label>
                       <input
                         v-model="form.startDate"
                         type="date"
-                        class="form-control form-control-custom"
+                        class="form-control-custom date-input-custom"
                         required
                       />
                     </div>
@@ -252,7 +254,7 @@
                       <input
                         v-model="form.endDate"
                         type="date"
-                        class="form-control form-control-custom"
+                        class="form-control-custom date-input-custom"
                       />
                     </div>
                   </div>
@@ -260,16 +262,16 @@
                   <!-- Budget -->
                   <div class="mb-3">
                     <label class="form-label-custom">
-                      Budget <span class="text-danger">*</span>
+                      Budget <span class="text-danger-custom">*</span>
                     </label>
-                    <div class="input-group">
-                      <span class="input-group-text bg-light text-muted border-end-0">$</span>
+                    <div class="input-group-custom">
+                      <span class="input-prefix-custom">$</span>
                       <input
                         v-model.number="form.budget"
                         type="number"
                         min="0"
                         step="0.01"
-                        class="form-control form-control-custom border-start-0 ps-1"
+                        class="form-control-custom input-has-prefix-custom"
                         placeholder="0.00"
                         required
                       />
@@ -281,7 +283,7 @@
                     <label class="form-label-custom">Description</label>
                     <textarea
                       v-model.trim="form.description"
-                      class="form-control form-control-custom"
+                      class="form-control-custom"
                       rows="3"
                       placeholder="Brief details about scope or requirements..."
                     ></textarea>
@@ -289,10 +291,10 @@
                 </div>
 
                 <!-- Modal Footer -->
-                <div class="modal-footer px-4 py-3 bg-light-subtle border-top">
+                <div class="modal-footer-custom">
                   <button
                     type="button"
-                    class="btn btn-light border text-secondary fw-medium px-3"
+                    class="btn-cancel-custom"
                     @click="closeForm"
                     :disabled="saving"
                   >
@@ -300,7 +302,7 @@
                   </button>
                   <button
                     type="submit"
-                    class="btn btn-primary primary-btn px-4"
+                    class="btn-save-custom"
                     :disabled="saving"
                   >
                     <span
@@ -715,13 +717,13 @@ onMounted(() => {
   justify-content: center;
 }
 
-/* Custom Modal */
+/* Custom Dark Modal (Matching Staff Management Modal Style) */
 .modal-backdrop-custom {
   position: fixed;
   inset: 0;
   z-index: 1050;
-  background-color: rgba(17, 24, 39, 0.4);
-  backdrop-filter: blur(2px);
+  background-color: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -734,38 +736,183 @@ onMounted(() => {
   margin: auto;
 }
 
+.modal-content-custom {
+  background: #1e293b;
+  color: #f8fafc;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+}
+
+.modal-header-custom {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-title-custom {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+}
+
 .btn-close-custom {
+  background: rgba(255, 255, 255, 0.15);
   border: none;
-  background: transparent;
-  font-size: 1.5rem;
-  line-height: 1;
-  color: #9ca3af;
-  padding: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .btn-close-custom:hover {
-  color: #111827;
+  background: rgba(255, 255, 255, 0.28);
+  color: #ffffff;
+}
+
+.modal-body-custom {
+  padding: 20px;
+  background: #1e293b;
 }
 
 .form-label-custom {
-  font-size: 0.8125rem;
-  font-weight: 500;
-  color: #374151;
-  margin-bottom: 0.375rem;
+  font-size: 12px;
+  font-weight: 600;
+  color: #cbd5e1;
+  margin-bottom: 6px;
   display: block;
 }
 
+.text-danger-custom {
+  color: #f87171;
+}
+
 .form-control-custom {
-  font-size: 0.875rem;
-  border-color: #d1d5db;
-  border-radius: 6px;
-  padding: 0.5rem 0.75rem;
+  width: 100%;
+  background-color: #0f172a;
+  border: 1px solid #334155;
+  color: #ffffff;
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.form-control-custom::placeholder {
+  color: #64748b;
 }
 
 .form-control-custom:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+  background-color: #0f172a;
+  color: #ffffff;
+}
+
+.form-select-custom {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%2394a3b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 16px 12px;
+  padding-right: 2.25rem;
+}
+
+.form-select-custom option {
+  background-color: #0f172a;
+  color: #ffffff;
+}
+
+.date-input-custom {
+  color-scheme: dark;
+}
+
+.input-group-custom {
+  display: flex;
+  align-items: center;
+}
+
+.input-prefix-custom {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #0f172a;
+  border: 1px solid #334155;
+  border-right: none;
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
+  color: #94a3b8;
+  padding: 9px 14px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.input-has-prefix-custom {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.modal-footer-custom {
+  padding: 14px 20px;
+  background: #1e293b;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.btn-cancel-custom {
+  background: transparent;
+  border: 1px solid #475569;
+  color: #cbd5e1;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-cancel-custom:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+  border-color: #64748b;
+}
+
+.btn-save-custom {
+  background: #2563eb;
+  border: none;
+  color: #ffffff;
+  border-radius: 8px;
+  padding: 8px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+}
+
+.btn-save-custom:hover:not(:disabled) {
+  background: #1d4ed8;
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+}
+
+.btn-save-custom:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 /* Modal Transitions */
