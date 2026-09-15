@@ -346,10 +346,10 @@
               </button>
               <button
                 class="filter-pill"
-                :class="{ active: projectFilter === 'Pending' }"
-                @click="projectFilter = 'Pending'"
+                :class="{ active: projectFilter === 'Pending Approval' }"
+                @click="projectFilter = 'Pending Approval'"
               >
-                Pending ({{ countByStatus('Pending') }})
+                Pending ({{ countByStatus('Pending Approval') }})
               </button>
               <button
                 class="filter-pill"
@@ -641,58 +641,18 @@ const rawTasks = ref([])
 const rawMaterials = ref([])
 const rawAccounting = ref([])
 
-// Realistic Cambodian construction fallback data
-const fallbackProjects = [
-  { id: 1, name: 'Phnom Penh Tower Extension & Commercial Hub', client: 'Chip Mong Group Co., Ltd.', status: 'Active', startDate: '2024-01-15', budget: 1500000, progress: 45 },
-  { id: 2, name: 'BKK1 Luxury Condominium Phase 2', client: 'Worldbridge Land Cambodia', status: 'Active', startDate: '2024-02-01', budget: 2800000, progress: 30 },
-  { id: 3, name: 'Siem Reap Cultural Resort Complex', client: 'Sokha Hotel & Resorts', status: 'Pending', startDate: '2024-03-20', budget: 1200000, progress: 0 },
-  { id: 4, name: 'National Road 3 Flyover & Bridge Expansion', client: 'Ministry of Public Works and Transport (MPWT)', status: 'Active', startDate: '2024-01-01', budget: 4500000, progress: 60 },
-  { id: 5, name: 'Kandal Smart Eco-Residential Park', client: 'Peng Huoth Group', status: 'Completed', startDate: '2023-05-15', budget: 950000, progress: 100 }
-]
-
-const fallbackStaff = [
-  { id: 1, name: 'Sokha Chan', role: 'Project Manager', department: 'Management' },
-  { id: 2, name: 'Vannak Heng', role: 'Senior Site Engineer', department: 'Engineering' },
-  { id: 3, name: 'Dara Chea', role: 'Site Supervisor', department: 'Operations' },
-  { id: 4, name: 'Bopha Meng', role: 'Chief Financial Accountant', department: 'Finance' },
-  { id: 5, name: 'Sreyneang Kim', role: 'Safety Controller', department: 'Safety' },
-  { id: 6, name: 'Rithy Sovann', role: 'Heavy Equipment Operator', department: 'Operations' }
-]
-
-const fallbackEquipment = [
-  { id: 1, name: 'CAT Excavator 320D', status: 'Available', type: 'Excavator' },
-  { id: 2, name: 'Komatsu PC200 Excavator', status: 'In Use', type: 'Excavator' },
-  { id: 3, name: 'XCMG 50T Mobile Truck Crane', status: 'Available', type: 'Crane' },
-  { id: 4, name: 'Sany HBT60 Concrete Pump', status: 'In Use', type: 'Concrete Pump' },
-  { id: 5, name: 'JCB 3CX Backhoe Loader', status: 'Maintenance', type: 'Loader' }
-]
-
-const fallbackTasks = [
-  { id: 1, title: 'Concrete Pouring for B2 Substructure', priority: 'High', status: 'In Progress', progress: 65 },
-  { id: 2, title: 'Deep Foundation Piling & Soil Testing', priority: 'Critical', status: 'Completed', progress: 100 },
-  { id: 3, title: 'Pre-stressed Concrete Girder Launching', priority: 'High', status: 'In Progress', progress: 40 },
-  { id: 4, title: 'Structural Frame Inspection & Fireproofing', priority: 'Medium', status: 'Not Started', progress: 0 },
-  { id: 5, title: 'MEP & Electrical Substation Setup', priority: 'Medium', status: 'In Progress', progress: 25 }
-]
-
-const fallbackMaterials = [
-  { name: 'K-Cement Portland Type 1', quantity: 2500, unit: 'Bags', supplier: 'Kampot Cement Co., Ltd.', percentage: 28, stockStatus: 'Reorder Soon', stockLevelClass: 'warning' },
-  { name: 'ISI High-Yield TMT Deformed Rebar 16mm', quantity: 350, unit: 'Tons', supplier: 'ISI Steel Cambodia Co., Ltd.', percentage: 72, stockStatus: 'Adequate', stockLevelClass: 'good' },
-  { name: 'Kampot Quarry Blue Stone Gravel', quantity: 800, unit: 'Tons', supplier: 'Kampot Mining Quarry Co.', percentage: 65, stockStatus: 'Adequate', stockLevelClass: 'good' },
-  { name: 'Soma Heavy Duty PVC Drainage Pipe', quantity: 1500, unit: 'Meters', supplier: 'Soma Trading & Supply', percentage: 90, stockStatus: 'High Stock', stockLevelClass: 'good' }
-]
-
-
 // Computed Dashboard Aggregates
 const summary = computed(() => {
-  const projects = rawProjects.value.length ? rawProjects.value : fallbackProjects
-  const staff = rawStaff.value.length ? rawStaff.value : fallbackStaff
-  const equipment = rawEquipment.value.length ? rawEquipment.value : fallbackEquipment
-  const tasks = rawTasks.value.length ? rawTasks.value : fallbackTasks
+  const projects = rawProjects.value
+  const staff = rawStaff.value
+  const equipment = rawEquipment.value
+  const tasks = rawTasks.value
 
   // Total Budgets
   const totalBudget = projects.reduce((acc, p) => acc + (Number(p.budget) || 0), 0)
-  const totalExpenses = Math.round(totalBudget * 0.38) // approximate current spend or actual from accounting
+  const totalExpenses = rawAccounting.value
+    .filter(record => (record.type || '').toLowerCase() === 'expense')
+    .reduce((acc, record) => acc + (Number(record.amount) || 0), 0)
   const remainingBudget = totalBudget - totalExpenses
 
   // Average Progress
@@ -705,21 +665,21 @@ const summary = computed(() => {
 
   // Staff Breakdown
   const staffRoles = {
-    engineers: staff.filter(s => (s.role || '').toLowerCase().includes('engineer')).length || 2,
-    operators: staff.filter(s => (s.role || '').toLowerCase().includes('operator')).length || 1,
-    mgmt: staff.filter(s => (s.role || '').toLowerCase().includes('manager') || (s.role || '').toLowerCase().includes('accountant')).length || 2
+    engineers: staff.filter(s => (s.role || '').toLowerCase().includes('engineer')).length,
+    operators: staff.filter(s => (s.role || '').toLowerCase().includes('operator')).length,
+    mgmt: staff.filter(s => (s.role || '').toLowerCase().includes('manager') || (s.role || '').toLowerCase().includes('accountant')).length
   }
 
   // Equipment Breakdown
-  const equipmentInUse = equipment.filter(e => (e.status || '').toLowerCase().includes('use')).length || 2
-  const equipmentAvailable = equipment.filter(e => (e.status || '').toLowerCase().includes('avail')).length || 2
-  const equipmentMaintenance = equipment.filter(e => (e.status || '').toLowerCase().includes('maint')).length || 1
-  const fleetReadiness = equipment.length ? Math.round((equipmentAvailable / equipment.length) * 100) : 80
+  const equipmentInUse = equipment.filter(e => (e.status || '').toLowerCase().includes('use')).length
+  const equipmentAvailable = equipment.filter(e => (e.status || '').toLowerCase().includes('avail')).length
+  const equipmentMaintenance = equipment.filter(e => (e.status || '').toLowerCase().includes('maint')).length
+  const fleetReadiness = equipment.length ? Math.round((equipmentAvailable / equipment.length) * 100) : 0
 
   // Tasks Breakdown
-  const tasksCompleted = tasks.filter(t => (t.status || '').toLowerCase() === 'completed').length || 1
-  const tasksPending = tasks.filter(t => (t.status || '').toLowerCase() !== 'completed').length || 4
-  const tasksCritical = tasks.filter(t => (t.priority || '').toLowerCase() === 'critical' || (t.priority || '').toLowerCase() === 'high').length || 2
+  const tasksCompleted = tasks.filter(t => (t.status || '').toLowerCase() === 'completed').length
+  const tasksPending = tasks.filter(t => (t.status || '').toLowerCase() !== 'completed').length
+  const tasksCritical = tasks.filter(t => (t.priority || '').toLowerCase() === 'critical' || (t.priority || '').toLowerCase() === 'high').length
 
   return {
     projectsList: projects,
@@ -762,7 +722,13 @@ const projectStatusSegments = computed(() => {
 
 // Critical Materials
 const criticalMaterials = computed(() => {
-  return fallbackMaterials
+  return rawMaterials.value
+    .filter(material => Number(material.quantity) < 500)
+    .map(material => ({
+      ...material,
+      stockStatus: 'Reorder Soon',
+      stockLevelClass: 'warning'
+    }))
 })
 
 // Filtered Projects for Table
@@ -787,12 +753,14 @@ const loadDashboardData = async () => {
   noticeMessage.value = ''
 
   try {
-    const [statsRes, projRes, staffRes, equipRes, tasksRes] = await Promise.allSettled([
+    const [statsRes, projRes, staffRes, equipRes, tasksRes, materialsRes, accountingRes] = await Promise.allSettled([
       dashboardApi.getStats(),
       projectsApi.getAll(),
       staffApi.getAll(),
       equipmentApi.getAll(),
-      tasksApi.getAll()
+      tasksApi.getAll(),
+      materialsApi.getAll(),
+      accountingApi.getAll()
     ])
 
     let anySuccess = false
@@ -822,12 +790,22 @@ const loadDashboardData = async () => {
       anySuccess = true
     }
 
+    if (materialsRes.status === 'fulfilled' && Array.isArray(materialsRes.value?.data)) {
+      rawMaterials.value = materialsRes.value.data
+      anySuccess = true
+    }
+
+    if (accountingRes.status === 'fulfilled' && Array.isArray(accountingRes.value?.data)) {
+      rawAccounting.value = accountingRes.value.data
+      anySuccess = true
+    }
+
     if (anySuccess) {
       isDemoMode.value = false
     } else {
       isDemoMode.value = true
-      noticeMessage.value = 'Displaying high-fidelity operational preview. Connect your local database to synchronize live field data.'
-      noticeType.value = 'notice-info'
+      noticeMessage.value = 'Live data could not be loaded. Check the backend connection and try again.'
+      noticeType.value = 'notice-warning'
     }
 
     await nextTick()
@@ -836,7 +814,7 @@ const loadDashboardData = async () => {
   } catch (err) {
     console.error('Failed to load dashboard data:', err)
     isDemoMode.value = true
-    noticeMessage.value = 'Using cached visual mode. Backend synchronization pending.'
+    noticeMessage.value = 'Live data could not be loaded. Check the backend connection and try again.'
     noticeType.value = 'notice-warning'
     await nextTick()
     renderAllCharts()
@@ -865,22 +843,28 @@ const renderFinanceChart = () => {
     financeChartInstance.destroy()
   }
 
-  const is6m = financeRange.value === '6m'
-  const labels = is6m
-    ? ['Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr']
-    : ['May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr']
+  const monthCount = financeRange.value === '6m' ? 6 : 12
+  const monthlyTotals = new Map()
 
-  const budgets = is6m
-    ? [320000, 380000, 490000, 560000, 620000, 750000]
-    : [210000, 240000, 280000, 310000, 350000, 390000, 420000, 480000, 520000, 560000, 620000, 750000]
+  rawAccounting.value.forEach((record) => {
+    const date = new Date(record.date)
+    if (Number.isNaN(date.getTime())) return
+    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+    const totals = monthlyTotals.get(key) || { income: 0, expense: 0 }
+    const amount = Number(record.amount) || 0
+    if ((record.type || '').toLowerCase() === 'income') totals.income += amount
+    if ((record.type || '').toLowerCase() === 'expense') totals.expense += amount
+    monthlyTotals.set(key, totals)
+  })
 
-  const expenses = is6m
-    ? [140000, 190000, 230000, 280000, 310000, 340000]
-    : [95000, 110000, 135000, 150000, 170000, 190000, 210000, 240000, 260000, 280000, 310000, 340000]
-
-  const revenue = is6m
-    ? [200000, 260000, 350000, 410000, 480000, 590000]
-    : [150000, 170000, 210000, 230000, 260000, 300000, 340000, 380000, 420000, 460000, 500000, 590000]
+  const keys = [...monthlyTotals.keys()].sort().slice(-monthCount)
+  const labels = keys.map(key => {
+    const [year, month] = key.split('-')
+    return new Intl.DateTimeFormat('en-US', { month: 'short', year: 'numeric' })
+      .format(new Date(Number(year), Number(month) - 1, 1))
+  })
+  const revenue = keys.map(key => monthlyTotals.get(key).income)
+  const expenses = keys.map(key => monthlyTotals.get(key).expense)
 
   financeChartInstance = new Chart(financeChartCanvas.value, {
     type: 'line',
@@ -896,18 +880,6 @@ const renderFinanceChart = () => {
           tension: 0.35,
           borderWidth: 2.5,
           pointBackgroundColor: '#10b981',
-          pointRadius: 4,
-          pointHoverRadius: 6
-        },
-        {
-          label: 'Total Capital Allocated',
-          data: budgets,
-          borderColor: '#2563eb',
-          backgroundColor: 'rgba(37, 99, 235, 0.04)',
-          fill: false,
-          tension: 0.35,
-          borderWidth: 2.5,
-          pointBackgroundColor: '#2563eb',
           pointRadius: 4,
           pointHoverRadius: 6
         },
@@ -1027,28 +999,38 @@ const renderTaskPriorityChart = () => {
     taskPriorityInstance.destroy()
   }
 
+  const priorities = ['Critical', 'High', 'Medium', 'Low']
+  const taskCounts = priorities.map(priority => {
+    const matchingTasks = rawTasks.value.filter(task => (task.priority || '').toLowerCase() === priority.toLowerCase())
+    return {
+      completed: matchingTasks.filter(task => (task.status || '').toLowerCase() === 'completed').length,
+      inProgress: matchingTasks.filter(task => (task.status || '').toLowerCase() === 'in progress').length,
+      pending: matchingTasks.filter(task => !['completed', 'in progress'].includes((task.status || '').toLowerCase())).length
+    }
+  })
+
   taskPriorityInstance = new Chart(taskPriorityCanvas.value, {
     type: 'bar',
     data: {
-      labels: ['Critical Urgent', 'High Priority', 'Medium Stage', 'Low / Backlog'],
+      labels: priorities,
       datasets: [
         {
           label: 'Completed',
-          data: [1, 2, 2, 1],
+          data: taskCounts.map(counts => counts.completed),
           backgroundColor: '#10b981',
           borderRadius: 6,
           stack: 'Stack 0'
         },
         {
           label: 'In Progress',
-          data: [2, 3, 2, 0],
+          data: taskCounts.map(counts => counts.inProgress),
           backgroundColor: '#3b82f6',
           borderRadius: 6,
           stack: 'Stack 0'
         },
         {
           label: 'Pending / Planned',
-          data: [1, 1, 3, 2],
+          data: taskCounts.map(counts => counts.pending),
           backgroundColor: '#e2e8f0',
           borderRadius: 6,
           stack: 'Stack 0'
@@ -1117,7 +1099,9 @@ const getStatusClass = (status) => {
   const s = (status || '').toLowerCase()
   if (s === 'active') return 'badge-active'
   if (s === 'completed') return 'badge-completed'
-  if (s === 'pending') return 'badge-pending'
+  if (s === 'pending' || s === 'pending approval') return 'badge-pending'
+  if (s === 'approved') return 'badge-completed'
+  if (s === 'rejected') return 'badge-hold'
   return 'badge-hold'
 }
 

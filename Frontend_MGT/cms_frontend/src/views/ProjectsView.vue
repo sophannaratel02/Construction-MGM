@@ -83,6 +83,9 @@
                   <span class="status-dot"></span>
                   {{ project.status || 'Unknown' }}
                 </span>
+                <small v-if="project.status === 'Rejected' && project.rejectionReason" class="d-block text-danger mt-1">
+                  {{ project.rejectionReason }}
+                </small>
               </td>
 
               <!-- Start Date -->
@@ -123,6 +126,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                   </button>
                   <button
+                    v-if="isAdmin"
                     type="button"
                     @click="deleteProject(project.id || project._id)"
                     class="btn-action-icon delete"
@@ -130,6 +134,18 @@
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                   </button>
+                  <button
+                    v-if="isAdmin && project.status === 'Pending Approval'"
+                    type="button"
+                    class="btn btn-sm btn-success"
+                    @click="approveProject(project)"
+                  >Approve</button>
+                  <button
+                    v-if="isAdmin && project.status === 'Pending Approval'"
+                    type="button"
+                    class="btn btn-sm btn-outline-danger"
+                    @click="rejectProject(project)"
+                  >Reject</button>
                 </div>
               </td>
             </tr>
@@ -217,10 +233,9 @@
                     <div class="col-md-6">
                       <label class="form-label-custom">Status</label>
                       <select v-model="form.status" class="form-control-custom form-select-custom">
-                        <option value="Active">Active</option>
-                        <option value="Pending">Pending</option>
-                        <option value="Completed">Completed</option>
-                        <option value="On Hold">On Hold</option>
+                        <option value="Pending Approval">Pending Approval</option>
+                        <option value="Approved">Approved</option>
+                        <option value="Rejected">Rejected</option>
                       </select>
                     </div>
                     <div class="col-md-6">
@@ -324,6 +339,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { projectsApi } from '../services/api'
 
 /* State */
@@ -333,11 +349,14 @@ const saving = ref(false)
 const showAddForm = ref(false)
 const editingId = ref(null)
 const errorMessage = ref('')
+const currentUser = JSON.parse(localStorage.getItem('cms_user') || '{}')
+const isAdmin = currentUser.role === 'admin'
+const route = useRoute()
 
 const emptyForm = () => ({
   name: '',
   client: '',
-  status: 'Active',
+  status: 'Pending Approval',
   startDate: '',
   endDate: '',
   budget: 0,
@@ -395,7 +414,7 @@ const saveProject = async () => {
     const payload = {
       name: form.value.name,
       client: form.value.client,
-      status: form.value.status,
+      status: 'Pending Approval',
       startDate: form.value.startDate,
       endDate: form.value.endDate || null,
       budget: Number(form.value.budget) || 0,
@@ -430,7 +449,7 @@ const editProject = (project) => {
   form.value = {
     name: project.name || '',
     client: project.client || '',
-    status: project.status || 'Active',
+    status: project.status || 'Pending Approval',
     startDate: formatDateForInput(project.startDate),
     endDate: formatDateForInput(project.endDate),
     budget: Number(project.budget) || 0,
@@ -439,6 +458,29 @@ const editProject = (project) => {
   }
 
   showAddForm.value = true
+}
+
+const approveProject = async (project) => {
+  if (!confirm(`Approve "${project.name}"?`)) return
+  try {
+    await projectsApi.approve(project.id)
+    window.dispatchEvent(new Event('cms-notifications-refresh'))
+    await loadProjects()
+  } catch (error) {
+    alert(error?.response?.data?.message || 'Failed to approve project.')
+  }
+}
+
+const rejectProject = async (project) => {
+  const rejectionReason = prompt(`Why are you rejecting "${project.name}"?`)
+  if (!rejectionReason?.trim()) return
+  try {
+    await projectsApi.reject(project.id, rejectionReason.trim())
+    window.dispatchEvent(new Event('cms-notifications-refresh'))
+    await loadProjects()
+  } catch (error) {
+    alert(error?.response?.data?.message || 'Failed to reject project.')
+  }
 }
 
 const deleteProject = async (id) => {
@@ -461,10 +503,9 @@ const deleteProject = async (id) => {
 /* Helpers */
 const getStatusClass = (status) => {
   const classes = {
-    Active: 'status-active',
-    Pending: 'status-pending',
-    Completed: 'status-completed',
-    'On Hold': 'status-onhold'
+    'Pending Approval': 'status-pending',
+    Approved: 'status-completed',
+    Rejected: 'status-onhold'
   }
   return classes[status] || 'status-default'
 }
@@ -502,8 +543,13 @@ const formatNumber = (number) => {
   })
 }
 
-onMounted(() => {
-  loadProjects()
+onMounted(async () => {
+  await loadProjects()
+  const projectId = Number(route.query.projectId)
+  if (projectId) {
+    const project = projects.value.find(item => Number(item.id) === projectId)
+    if (project) editProject(project)
+  }
 })
 </script>
 

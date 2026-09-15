@@ -4,6 +4,17 @@
       
       <!-- Left Section: Search Bar & System Branding -->
       <div class="d-flex align-items-center gap-3">
+        <button
+          type="button"
+          class="btn-action-icon d-lg-none"
+          aria-label="Open navigation"
+          title="Open navigation"
+          @click="$emit('toggle-sidebar')"
+        >
+          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
         <!-- Global Quick Search Input -->
         <div class="header-search-wrapper d-none d-md-flex align-items-center">
           <svg class="search-icon" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -74,7 +85,7 @@
             <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
             </svg>
-            <span v-if="unreadCount > 0" class="notification-indicator"></span>
+            <span v-if="unreadCount > 0" class="notification-indicator">{{ unreadCount }}</span>
           </button>
 
           <!-- Notifications Popup -->
@@ -89,15 +100,15 @@
               </div>
             </div>
             <div class="notif-list">
-              <div v-for="item in notifications.slice(0, 6)" :key="item.id" class="notif-item" :class="{ unread: !item.isRead }">
+              <div v-for="item in notifications.slice(0, 6)" :key="item.id" class="notif-item" :class="{ unread: !item.is_read }" @click="openNotification(item)">
                 <div class="notif-icon" :class="getNotifIconBg(item.severity)">
                   <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                   </svg>
                 </div>
                 <div>
-                  <div class="notif-text">{{ item.description }}</div>
-                  <div class="notif-time">{{ item.module }} • {{ formatTimeAgo(item.createdAt) }}</div>
+                  <div class="notif-text">{{ item.message }}</div>
+                  <div class="notif-time">{{ item.projectName || 'Project workflow' }} • {{ formatTimeAgo(item.created_at) }}</div>
                 </div>
               </div>
               <div v-if="notifications.length === 0" class="text-center text-muted py-3 font-12">
@@ -116,11 +127,11 @@
             @click="toggleUserMenu"
           >
             <div class="user-avatar d-flex align-items-center justify-content-center">
-              AU
+              {{ getUserInitials(currentUser.name) }}
             </div>
             <div class="user-info d-none d-sm-block text-start">
-              <div class="user-name">Admin User</div>
-              <div class="user-role">Project Director</div>
+              <div class="user-name">{{ currentUser.name || 'Admin User' }}</div>
+              <div class="user-role">{{ currentUser.role ? currentUser.role.toUpperCase() : 'ADMIN' }}</div>
             </div>
             <svg class="chevron-down" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
@@ -130,8 +141,8 @@
           <!-- User Menu Dropdown -->
           <div v-if="showUserMenu" class="user-menu-dropdown">
             <div class="user-menu-header">
-              <div class="user-menu-name">Admin User</div>
-              <div class="user-menu-email">admin@cms.kh</div>
+              <div class="user-menu-name">{{ currentUser.name || 'Admin User' }}</div>
+              <div class="user-menu-email">{{ currentUser.email || 'admin@cms.kh' }}</div>
             </div>
             <div class="menu-divider"></div>
             <router-link to="/dashboard" class="menu-item" @click="showUserMenu = false">
@@ -169,7 +180,8 @@
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
-import { auditLogsApi } from '../services/api'
+import { authApi, notificationsApi } from '../services/api'
+import { useRouter } from 'vue-router'
 
 defineEmits(['toggle-sidebar'])
 
@@ -178,14 +190,16 @@ const showSearchDropdown = ref(false)
 const showNotifications = ref(false)
 const showUserMenu = ref(false)
 const notifications = ref([])
+const currentUser = ref(JSON.parse(localStorage.getItem('cms_user') || '{}'))
+const router = useRouter()
 
 const unreadCount = computed(() => {
-  return notifications.value.filter(n => !n.isRead).length
+  return notifications.value.filter(n => !n.is_read).length
 })
 
 const fetchNotifications = async () => {
   try {
-    const res = await auditLogsApi.getAll()
+    const res = await notificationsApi.getAll()
     notifications.value = res.data || []
   } catch (err) {
     console.error('Failed to load notifications:', err)
@@ -194,11 +208,16 @@ const fetchNotifications = async () => {
 
 const handleMarkAllRead = async () => {
   try {
-    await auditLogsApi.markAllRead()
-    notifications.value.forEach(n => { n.isRead = 1 })
+    await notificationsApi.markAllRead()
+    notifications.value.forEach(n => { n.is_read = 1 })
   } catch (err) {
     console.error('Failed to mark read:', err)
   }
+}
+
+const openNotification = async (notification) => {
+  showNotifications.value = false
+  if (notification.project_id) router.push({ path: '/projects', query: { projectId: notification.project_id } })
 }
 
 const getNotifIconBg = (severity) => {
@@ -236,9 +255,28 @@ const toggleUserMenu = () => {
   showNotifications.value = false
 }
 
-const handleLogout = () => {
+const getUserInitials = (name = '') => {
+  if (!name) return 'AU'
+  const parts = name.split(' ').filter(Boolean)
+  return parts.slice(0, 2).map(part => part[0]?.toUpperCase() || '').join('') || 'AU'
+}
+
+const syncUser = () => {
+  currentUser.value = JSON.parse(localStorage.getItem('cms_user') || '{}')
+}
+
+const handleLogout = async () => {
   showUserMenu.value = false
-  alert('You have logged out of MGM Command System.')
+  try {
+    await authApi.logout()
+  } catch (error) {
+    console.warn('Logout request failed; clearing local session:', error)
+  }
+  localStorage.removeItem('cms_token')
+  localStorage.removeItem('cms_user')
+  window.dispatchEvent(new Event('cms-auth-change'))
+  syncUser()
+  window.location.href = '/login'
 }
 
 // Global keyboard shortcut for Cmd/Ctrl+K
@@ -251,12 +289,17 @@ const handleKeyDown = (e) => {
 }
 
 onMounted(() => {
+  syncUser()
   window.addEventListener('keydown', handleKeyDown)
+  window.addEventListener('cms-auth-change', syncUser)
+  window.addEventListener('cms-notifications-refresh', fetchNotifications)
   fetchNotifications()
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', handleKeyDown)
+  window.removeEventListener('cms-auth-change', syncUser)
+  window.removeEventListener('cms-notifications-refresh', fetchNotifications)
 })
 </script>
 

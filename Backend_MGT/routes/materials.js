@@ -38,21 +38,21 @@ router.get('/:id', async (req, res) => {
 // POST create material
 router.post('/', async (req, res) => {
   try {
-    const { name, category, unit, quantity, unitPrice, supplier } = req.body
+    const { name, category, unit, quantity, unitPrice, supplier, description } = req.body
     
-    if (!name || !category || !unit || !quantity || !unitPrice || !supplier) {
-      return res.status(400).json({ error: 'Missing required fields' })
+    if (!name || !category || !unit || quantity === undefined || quantity === null || quantity === '' || unitPrice === undefined || unitPrice === null || unitPrice === '' || !supplier) {
+      return res.status(400).json({ message: 'Name, category, unit, quantity, unit price, and supplier are required.' })
     }
 
     const pool = getPool()
     const connection = await pool.getConnection()
     const [result] = await connection.query(
-      'INSERT INTO materials (name, category, unit, quantity, unitPrice, supplier) VALUES (?, ?, ?, ?, ?, ?)',
-      [name, category, unit, quantity, unitPrice, supplier]
+      'INSERT INTO materials (name, category, unit, quantity, unitPrice, supplier, description) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [name, category, unit, quantity, unitPrice, supplier, description || null]
     )
     connection.release()
     
-    res.status(201).json({ id: result.insertId, name, category, unit, quantity, unitPrice, supplier })
+    res.status(201).json({ id: result.insertId, name, category, unit, quantity, unitPrice, supplier, description: description || null })
   } catch (error) {
     console.error('Error creating material:', error)
     res.status(500).json({ error: error.message })
@@ -62,17 +62,26 @@ router.post('/', async (req, res) => {
 // PUT update material
 router.put('/:id', async (req, res) => {
   try {
-    const { name, category, unit, quantity, unitPrice, supplier } = req.body
+    const { name, category, unit, quantity, unitPrice, supplier, description } = req.body
+
+    if (!name || !category || !unit || quantity === undefined || quantity === null || quantity === '' || unitPrice === undefined || unitPrice === null || unitPrice === '' || !supplier) {
+      return res.status(400).json({ message: 'Name, category, unit, quantity, unit price, and supplier are required.' })
+    }
     
     const pool = getPool()
     const connection = await pool.getConnection()
-    await connection.query(
-      'UPDATE materials SET name = ?, category = ?, unit = ?, quantity = ?, unitPrice = ?, supplier = ? WHERE id = ?',
-      [name, category, unit, quantity, unitPrice, supplier, req.params.id]
+    const [result] = await connection.query(
+      'UPDATE materials SET name = ?, category = ?, unit = ?, quantity = ?, unitPrice = ?, supplier = ?, description = ? WHERE id = ?',
+      [name, category, unit, quantity, unitPrice, supplier, description || null, req.params.id]
     )
+
+    if (result.affectedRows === 0) {
+      connection.release()
+      return res.status(404).json({ message: 'Material not found.' })
+    }
     connection.release()
     
-    res.json({ id: req.params.id, name, category, unit, quantity, unitPrice, supplier })
+    res.json({ id: req.params.id, name, category, unit, quantity, unitPrice, supplier, description: description || null })
   } catch (error) {
     console.error('Error updating material:', error)
     res.status(500).json({ error: error.message })

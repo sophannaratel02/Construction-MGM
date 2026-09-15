@@ -9,13 +9,59 @@ const api = axios.create({
   },
 })
 
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('cms_token')
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+})
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('cms_token')
+      localStorage.removeItem('cms_user')
+      window.location.href = '/login'
+    }
+    return Promise.reject(error)
+  }
+)
+
+export const authApi = {
+  login: (email, password) => api.post('/auth/login', { email, password }),
+  register: (payload) => api.post('/auth/register', payload),
+  forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
+  resetPassword: (token, password) => api.post('/auth/reset-password', { token, password }),
+  logout: () => api.post('/auth/logout'),
+  me: () => api.get('/auth/me'),
+}
+
+export const adminUsersApi = {
+  getAll: () => api.get('/admin/users'),
+  create: (data) => api.post('/admin/users', data),
+  update: (id, data) => api.put(`/admin/users/${id}`, data),
+  delete: (id) => api.delete(`/admin/users/${id}`),
+}
+
 // Projects API
 export const projectsApi = {
   getAll: () => api.get('/projects'),
   getById: (id) => api.get(`/projects/${id}`),
+  getStatus: (id) => api.get(`/projects/${id}/status`),
   create: (data) => api.post('/projects', data),
   update: (id, data) => api.put(`/projects/${id}`, data),
   delete: (id) => api.delete(`/projects/${id}`),
+  approve: (id) => api.post(`/projects/${id}/approve`),
+  reject: (id, rejectionReason) => api.post(`/projects/${id}/reject`, { rejectionReason }),
+}
+
+export const notificationsApi = {
+  getAll: () => api.get('/notifications'),
+  markRead: (id) => api.patch(`/notifications/${id}/read`),
+  markAllRead: () => api.patch('/notifications/read-all'),
+  getPendingCount: () => api.get('/notifications/pending-count'),
 }
 
 // Staff API

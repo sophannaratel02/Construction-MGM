@@ -9,11 +9,13 @@
     "dev": "node --watch server.js"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "mysql2": "^3.6.5",
+    "body-parser": "^1.20.2",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
-    "body-parser": "^1.20.2"
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
+    "mysql2": "^3.6.5",
+    "nodemailer": "^10.0.10"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"
