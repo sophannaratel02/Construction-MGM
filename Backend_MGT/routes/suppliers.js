@@ -38,7 +38,7 @@ router.get('/:id', async (req, res) => {
 // POST create supplier
 router.post('/', async (req, res) => {
   try {
-    const { companyName, contactPerson, email, phone, productCategory } = req.body
+    const { companyName, contactPerson, email, phone, productCategory, address, city, state, zipCode, taxId } = req.body
     
     if (!companyName || !contactPerson || !email || !phone || !productCategory) {
       return res.status(400).json({ error: 'Missing required fields' })
@@ -47,12 +47,12 @@ router.post('/', async (req, res) => {
     const pool = getPool()
     const connection = await pool.getConnection()
     const [result] = await connection.query(
-      'INSERT INTO suppliers (companyName, contactPerson, email, phone, productCategory) VALUES (?, ?, ?, ?, ?)',
-      [companyName, contactPerson, email, phone, productCategory]
+      'INSERT INTO suppliers (companyName, contactPerson, email, phone, productCategory, address, city, state, zipCode, taxId) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [companyName, contactPerson, email, phone, productCategory, address || null, city || null, state || null, zipCode || null, taxId || null]
     )
     connection.release()
     
-    res.status(201).json({ id: result.insertId, companyName, contactPerson, email, phone, productCategory })
+    res.status(201).json({ id: result.insertId, companyName, contactPerson, email, phone, productCategory, address: address || null, city: city || null, state: state || null, zipCode: zipCode || null, taxId: taxId || null })
   } catch (error) {
     console.error('Error creating supplier:', error)
     res.status(500).json({ error: error.message })
@@ -62,17 +62,22 @@ router.post('/', async (req, res) => {
 // PUT update supplier
 router.put('/:id', async (req, res) => {
   try {
-    const { companyName, contactPerson, email, phone, productCategory } = req.body
+    const { companyName, contactPerson, email, phone, productCategory, address, city, state, zipCode, taxId } = req.body
     
     const pool = getPool()
     const connection = await pool.getConnection()
-    await connection.query(
-      'UPDATE suppliers SET companyName = ?, contactPerson = ?, email = ?, phone = ?, productCategory = ? WHERE id = ?',
-      [companyName, contactPerson, email, phone, productCategory, req.params.id]
+    const [result] = await connection.query(
+      'UPDATE suppliers SET companyName = ?, contactPerson = ?, email = ?, phone = ?, productCategory = ?, address = ?, city = ?, state = ?, zipCode = ?, taxId = ? WHERE id = ?',
+      [companyName, contactPerson, email, phone, productCategory, address || null, city || null, state || null, zipCode || null, taxId || null, req.params.id]
     )
+
+    if (result.affectedRows === 0) {
+      connection.release()
+      return res.status(404).json({ message: 'Supplier not found.' })
+    }
     connection.release()
     
-    res.json({ id: req.params.id, companyName, contactPerson, email, phone, productCategory })
+    res.json({ id: req.params.id, companyName, contactPerson, email, phone, productCategory, address: address || null, city: city || null, state: state || null, zipCode: zipCode || null, taxId: taxId || null })
   } catch (error) {
     console.error('Error updating supplier:', error)
     res.status(500).json({ error: error.message })

@@ -38,21 +38,21 @@ router.get('/:id', async (req, res) => {
 // POST create task
 router.post('/', async (req, res) => {
   try {
-    const { title, project, assignedTo, status, priority, dueDate } = req.body
+    const { title, project, assignedTo, status, priority, dueDate, progress, description } = req.body
     
     if (!title || !project || !assignedTo || !status || !priority || !dueDate) {
-      return res.status(400).json({ error: 'Missing required fields' })
+      return res.status(400).json({ message: 'Title, project, assignee, status, priority, and due date are required.' })
     }
 
     const pool = getPool()
     const connection = await pool.getConnection()
     const [result] = await connection.query(
-      'INSERT INTO tasks (title, project, assignedTo, status, priority, dueDate) VALUES (?, ?, ?, ?, ?, ?)',
-      [title, project, assignedTo, status, priority, dueDate]
+      'INSERT INTO tasks (title, project, assignedTo, status, priority, dueDate, progress, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      [title, project, assignedTo, status, priority, dueDate, progress ?? 0, description || null]
     )
     connection.release()
     
-    res.status(201).json({ id: result.insertId, title, project, assignedTo, status, priority, dueDate })
+    res.status(201).json({ id: result.insertId, title, project, assignedTo, status, priority, dueDate, progress: progress ?? 0, description: description || null })
   } catch (error) {
     console.error('Error creating task:', error)
     res.status(500).json({ error: error.message })
@@ -62,17 +62,26 @@ router.post('/', async (req, res) => {
 // PUT update task
 router.put('/:id', async (req, res) => {
   try {
-    const { title, project, assignedTo, status, priority, dueDate } = req.body
+    const { title, project, assignedTo, status, priority, dueDate, progress, description } = req.body
+
+    if (!title || !project || !assignedTo || !status || !priority || !dueDate) {
+      return res.status(400).json({ message: 'Title, project, assignee, status, priority, and due date are required.' })
+    }
     
     const pool = getPool()
     const connection = await pool.getConnection()
-    await connection.query(
-      'UPDATE tasks SET title = ?, project = ?, assignedTo = ?, status = ?, priority = ?, dueDate = ? WHERE id = ?',
-      [title, project, assignedTo, status, priority, dueDate, req.params.id]
+    const [result] = await connection.query(
+      'UPDATE tasks SET title = ?, project = ?, assignedTo = ?, status = ?, priority = ?, dueDate = ?, progress = ?, description = ? WHERE id = ?',
+      [title, project, assignedTo, status, priority, dueDate, progress ?? 0, description || null, req.params.id]
     )
+
+    if (result.affectedRows === 0) {
+      connection.release()
+      return res.status(404).json({ message: 'Task not found.' })
+    }
     connection.release()
     
-    res.json({ id: req.params.id, title, project, assignedTo, status, priority, dueDate })
+    res.json({ id: req.params.id, title, project, assignedTo, status, priority, dueDate, progress: progress ?? 0, description: description || null })
   } catch (error) {
     console.error('Error updating task:', error)
     res.status(500).json({ error: error.message })

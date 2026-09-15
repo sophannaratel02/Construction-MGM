@@ -1,15 +1,13 @@
 <template>
-  <div class="app-container">
-
-    <!-- Sidebar -->
+  <div v-if="showMainLayout" class="app-container">
     <Sidebar
       :is-open="isSidebarOpen"
       :is-collapsed="isSidebarCollapsed"
+      :user-role="currentUser.role"
       @close="isSidebarOpen = false"
       @toggle-collapse="isSidebarCollapsed = !isSidebarCollapsed"
     />
 
-    <!-- Mobile Backdrop -->
     <Transition name="backdrop">
       <div
         v-if="isSidebarOpen"
@@ -18,40 +16,93 @@
       ></div>
     </Transition>
 
-    <!-- Application Content -->
     <div
       class="app-content"
       :class="{ 'sidebar-collapsed': isSidebarCollapsed }"
     >
-
-      <!-- Navbar -->
-      <Navbar />
-
-      <!-- Main Content -->
+      <Navbar @toggle-sidebar="toggleSidebar" />
       <main class="app-main">
         <div class="content-wrapper">
           <router-view />
         </div>
       </main>
-
     </div>
 
     <!-- Global Project-Matched Alert Toast Notifications -->
     <AlertToast />
   </div>
+
+  <router-view v-else />
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { computed, onMounted, onBeforeUnmount, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import Navbar from './components/navbar.vue'
 import Sidebar from './components/sidebar.vue'
-import AlertToast from './components/AlertToast.vue'
 
-const isSidebarOpen = ref(true)
+import { authApi } from './services/api.js'
+import AlertToast from './components/AlertToast.vue'
+main
+
+const route = useRoute()
+const router = useRouter()
+const isSidebarOpen = ref(window.matchMedia('(min-width: 992px)').matches)
 const isSidebarCollapsed = ref(localStorage.getItem('sidebar_collapsed') === 'true')
+const isAuthenticated = ref(!!localStorage.getItem('cms_token'))
+const currentUser = ref(JSON.parse(localStorage.getItem('cms_user') || '{}'))
+const showMainLayout = computed(() => route.meta.requiresAuth && isAuthenticated.value)
+
+const toggleSidebar = () => {
+  isSidebarOpen.value = !isSidebarOpen.value
+}
+
+const syncAuthState = () => {
+  isAuthenticated.value = !!localStorage.getItem('cms_token')
+  currentUser.value = JSON.parse(localStorage.getItem('cms_user') || '{}')
+
+  if (!isAuthenticated.value && route.meta.requiresAuth) {
+    router.replace('/login')
+  }
+}
+
+const validateSession = async () => {
+  if (!localStorage.getItem('cms_token')) return
+
+  try {
+    const response = await authApi.me()
+    localStorage.setItem('cms_user', JSON.stringify(response.data.user))
+    currentUser.value = response.data.user
+    isAuthenticated.value = true
+  } catch (error) {
+    localStorage.removeItem('cms_token')
+    localStorage.removeItem('cms_user')
+    isAuthenticated.value = false
+    if (route.meta.requiresAuth) {
+      router.replace('/login')
+    }
+  }
+}
+
+const syncViewport = () => {
+  if (window.matchMedia('(min-width: 992px)').matches) {
+    isSidebarOpen.value = true
+  }
+}
 
 watch(isSidebarCollapsed, (newVal) => {
   localStorage.setItem('sidebar_collapsed', newVal.toString())
+})
+
+onMounted(() => {
+  window.addEventListener('cms-auth-change', syncAuthState)
+  window.addEventListener('resize', syncViewport)
+  validateSession()
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('cms-auth-change', syncAuthState)
+  window.removeEventListener('resize', syncViewport)
 })
 </script>
 

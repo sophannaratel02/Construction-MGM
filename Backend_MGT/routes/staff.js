@@ -38,21 +38,21 @@ router.get('/:id', async (req, res) => {
 // POST create staff
 router.post('/', async (req, res) => {
   try {
-    const { name, role, email, phone, salary, status, department, image } = req.body
+    const { name, role, email, phone, salary, status, department, image, hireDate } = req.body
     
-    if (!name || !role || !email || !phone || !salary) {
-      return res.status(400).json({ error: 'Missing required fields' })
+    if (!name || !role || !email || !phone || salary === undefined || salary === null || salary === '') {
+      return res.status(400).json({ message: 'Name, role, email, phone, and salary are required.' })
     }
 
     const pool = getPool()
     const connection = await pool.getConnection()
     const [result] = await connection.query(
-      'INSERT INTO staff (name, role, email, phone, salary, status, department, image) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [name, role, email, phone, salary, status || 'Active', department || 'Engineering', image || null]
+      'INSERT INTO staff (name, role, email, phone, salary, status, department, image, hireDate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [name, role, email, phone, salary, status || 'Active', department || 'Engineering', image || null, hireDate || null]
     )
     connection.release()
     
-    res.status(201).json({ id: result.insertId, name, role, email, phone, salary, status: status || 'Active', department: department || 'Engineering', image: image || null })
+    res.status(201).json({ id: result.insertId, name, role, email, phone, salary, status: status || 'Active', department: department || 'Engineering', image: image || null, hireDate: hireDate || null })
   } catch (error) {
     console.error('Error creating staff:', error)
     res.status(500).json({ error: error.message })
@@ -62,17 +62,26 @@ router.post('/', async (req, res) => {
 // PUT update staff
 router.put('/:id', async (req, res) => {
   try {
-    const { name, role, email, phone, salary, status, department, image } = req.body
+    const { name, role, email, phone, salary, status, department, image, hireDate } = req.body
+
+    if (!name || !role || !email || !phone || salary === undefined || salary === null || salary === '') {
+      return res.status(400).json({ message: 'Name, role, email, phone, and salary are required.' })
+    }
     
     const pool = getPool()
     const connection = await pool.getConnection()
-    await connection.query(
-      'UPDATE staff SET name = ?, role = ?, email = ?, phone = ?, salary = ?, status = ?, department = ?, image = ? WHERE id = ?',
-      [name, role, email, phone, salary, status, department, image || null, req.params.id]
+    const [result] = await connection.query(
+      'UPDATE staff SET name = ?, role = ?, email = ?, phone = ?, salary = ?, status = ?, department = ?, image = ?, hireDate = ? WHERE id = ?',
+      [name, role, email, phone, salary, status || 'Active', department || 'Engineering', image || null, hireDate || null, req.params.id]
     )
+
+    if (result.affectedRows === 0) {
+      connection.release()
+      return res.status(404).json({ message: 'Staff member not found.' })
+    }
     connection.release()
     
-    res.json({ id: req.params.id, name, role, email, phone, salary, status, department, image: image || null })
+    res.json({ id: req.params.id, name, role, email, phone, salary, status: status || 'Active', department: department || 'Engineering', image: image || null, hireDate: hireDate || null })
   } catch (error) {
     console.error('Error updating staff:', error)
     res.status(500).json({ error: error.message })

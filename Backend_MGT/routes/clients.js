@@ -40,7 +40,7 @@ router.post('/', async (req, res) => {
   try {
     const companyName = req.body.companyName ?? req.body.company_name
     const contactPerson = req.body.contactPerson ?? req.body.contact_person
-    const { email, phone, address } = req.body
+    const { email, phone, address, city, state, zipCode, taxId } = req.body
     
     if (!companyName || !contactPerson || !email || !phone || !address) {
       return res.status(400).json({ error: 'companyName, contactPerson, email, phone, and address are required' })
@@ -49,12 +49,12 @@ router.post('/', async (req, res) => {
     const pool = getPool()
     const connection = await pool.getConnection()
     const [result] = await connection.query(
-      'INSERT INTO clients (companyName, contactPerson, email, phone, address) VALUES (?, ?, ?, ?, ?)',
-      [companyName, contactPerson, email, phone, address]
+      'INSERT INTO clients (companyName, contactPerson, email, phone, address, city, state, zipCode, taxId) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [companyName, contactPerson, email, phone, address, city || null, state || null, zipCode || null, taxId || null]
     )
     connection.release()
     
-    res.status(201).json({ id: result.insertId, companyName, contactPerson, email, phone, address })
+    res.status(201).json({ id: result.insertId, companyName, contactPerson, email, phone, address, city: city || null, state: state || null, zipCode: zipCode || null, taxId: taxId || null })
   } catch (error) {
     console.error('Error creating client:', error)
     res.status(500).json({ error: error.message })
@@ -66,7 +66,7 @@ router.put('/:id', async (req, res) => {
   try {
     const companyName = req.body.companyName ?? req.body.company_name
     const contactPerson = req.body.contactPerson ?? req.body.contact_person
-    const { email, phone, address } = req.body
+    const { email, phone, address, city, state, zipCode, taxId } = req.body
 
     if (!companyName || !contactPerson || !email || !phone || !address) {
       return res.status(400).json({ error: 'companyName, contactPerson, email, phone, and address are required' })
@@ -74,13 +74,18 @@ router.put('/:id', async (req, res) => {
     
     const pool = getPool()
     const connection = await pool.getConnection()
-    await connection.query(
-      'UPDATE clients SET companyName = ?, contactPerson = ?, email = ?, phone = ?, address = ? WHERE id = ?',
-      [companyName, contactPerson, email, phone, address, req.params.id]
+    const [result] = await connection.query(
+      'UPDATE clients SET companyName = ?, contactPerson = ?, email = ?, phone = ?, address = ?, city = ?, state = ?, zipCode = ?, taxId = ? WHERE id = ?',
+      [companyName, contactPerson, email, phone, address, city || null, state || null, zipCode || null, taxId || null, req.params.id]
     )
+
+    if (result.affectedRows === 0) {
+      connection.release()
+      return res.status(404).json({ message: 'Client not found.' })
+    }
     connection.release()
     
-    res.json({ id: req.params.id, companyName, contactPerson, email, phone, address })
+    res.json({ id: req.params.id, companyName, contactPerson, email, phone, address, city: city || null, state: state || null, zipCode: zipCode || null, taxId: taxId || null })
   } catch (error) {
     console.error('Error updating client:', error)
     res.status(500).json({ error: error.message })

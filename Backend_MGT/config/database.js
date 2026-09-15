@@ -1,5 +1,6 @@
 import mysql from 'mysql2/promise'
 import dotenv from 'dotenv'
+import { hashPassword } from '../utils/auth.js'
 
 dotenv.config()
 
@@ -17,11 +18,126 @@ export async function connectDB() {
       queueLimit: 0,
     })
 
-    // Test the connection
     const connection = await pool.getConnection()
     console.log('✓ Database connected successfully')
 
-    // Ensure audit_logs table exists
+    const ensureColumn = async (table, column, definition) => {
+      const [columns] = await connection.query(
+        'SELECT COUNT(*) AS count FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND COLUMN_NAME = ?',
+        [process.env.DB_NAME || 'construction_management', table, column]
+      )
+
+      if (columns[0].count === 0) {
+        await connection.query(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`)
+      }
+    }
+
+    await ensureColumn('projects', 'endDate', 'DATE NULL')
+    await ensureColumn('projects', 'progress', 'INT NOT NULL DEFAULT 0')
+    await ensureColumn('projects', 'description', 'LONGTEXT NULL')
+    await ensureColumn('projects', 'userId', 'INT NULL')
+    await ensureColumn('projects', 'approvedBy', 'INT NULL')
+    await ensureColumn('projects', 'approvedAt', 'DATETIME NULL')
+    await ensureColumn('projects', 'rejectionReason', 'TEXT NULL')
+    await ensureColumn('staff', 'hireDate', 'DATE NULL')
+    await ensureColumn('staff', 'department', 'VARCHAR(100) NULL')
+    await ensureColumn('staff', 'image', 'LONGTEXT NULL')
+    await ensureColumn('materials', 'description', 'LONGTEXT NULL')
+    await ensureColumn('equipment', 'maintenanceDate', 'DATE NULL')
+    await ensureColumn('equipment', 'location', 'VARCHAR(255) NULL')
+    await ensureColumn('equipment', 'description', 'LONGTEXT NULL')
+    await ensureColumn('tasks', 'description', 'LONGTEXT NULL')
+    await ensureColumn('tasks', 'completedDate', 'DATE NULL')
+    await ensureColumn('tasks', 'progress', 'INT NOT NULL DEFAULT 0')
+    await ensureColumn('accounting', 'reference', 'VARCHAR(100) NULL')
+    await ensureColumn('accounting', 'notes', 'LONGTEXT NULL')
+    await ensureColumn('clients', 'city', 'VARCHAR(100) NULL')
+    await ensureColumn('clients', 'state', 'VARCHAR(100) NULL')
+    await ensureColumn('clients', 'zipCode', 'VARCHAR(20) NULL')
+    await ensureColumn('clients', 'taxId', 'VARCHAR(50) NULL')
+    await ensureColumn('suppliers', 'address', 'LONGTEXT NULL')
+    await ensureColumn('suppliers', 'city', 'VARCHAR(100) NULL')
+    await ensureColumn('suppliers', 'state', 'VARCHAR(100) NULL')
+    await ensureColumn('suppliers', 'zipCode', 'VARCHAR(20) NULL')
+    await ensureColumn('suppliers', 'taxId', 'VARCHAR(50) NULL')
+
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        password_hash VARCHAR(255) NOT NULL,
+        role VARCHAR(20) NOT NULL DEFAULT 'user',
+        is_active TINYINT(1) NOT NULL DEFAULT 1,
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_email (email),
+        INDEX idx_role (role),
+        CONSTRAINT chk_users_role CHECK (role IN ('admin', 'user'))
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    `)
+
+    const [userColumns] = await connection.query(
+      'SELECT COUNT(*) AS count FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND COLUMN_NAME = ?',
+      [process.env.DB_NAME || 'construction_management', 'users', 'is_active']
+    )
+
+    if (userColumns[0].count === 0) {
+      await connection.query('ALTER TABLE users ADD COLUMN is_active TINYINT(1) NOT NULL DEFAULT 1')
+    }
+
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS password_reset_tokens (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        user_id INT NOT NULL,
+        token_hash VARCHAR(64) UNIQUE,
+        expires_at DATETIME NOT NULL,
+        used_at DATETIME NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        INDEX idx_user_id (user_id),
+        INDEX idx_token_hash (token_hash)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    `)
+
+    const [legacyTokenColumn] = await connection.query(
+      'SELECT COUNT(*) AS count FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND COLUMN_NAME = ?',
+      [process.env.DB_NAME || 'construction_management', 'password_reset_tokens', 'token']
+    )
+    if (legacyTokenColumn[0].count > 0) {
+      await connection.query('ALTER TABLE password_reset_tokens MODIFY COLUMN token VARCHAR(255) NULL')
+    }
+    await ensureColumn('password_reset_tokens', 'token_hash', 'VARCHAR(64) NULL')
+    await ensureColumn('password_reset_tokens', 'used_at', 'DATETIME NULL')
+
+    const [legacyIndex] = await connection.query(
+      'SELECT COUNT(*) AS count FROM INFORMATION_SCHEMA.STATISTICS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND INDEX_NAME = ?',
+      [process.env.DB_NAME || 'construction_management', 'password_reset_tokens', 'idx_token']
+    )
+    if (legacyIndex[0].count > 0) {
+      await connection.query('ALTER TABLE password_reset_tokens DROP INDEX idx_token')
+    }
+    const [tokenHashIndex] = await connection.query(
+      'SELECT COUNT(*) AS count FROM INFORMATION_SCHEMA.STATISTICS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND INDEX_NAME = ?',
+      [process.env.DB_NAME || 'construction_management', 'password_reset_tokens', 'idx_token_hash']
+    )
+    if (tokenHashIndex[0].count === 0) {
+      await connection.query('ALTER TABLE password_reset_tokens ADD INDEX idx_token_hash (token_hash)')
+    }
+
+    await connection.query("UPDATE users SET role = 'user' WHERE role IS NULL OR role NOT IN ('admin', 'user')")
+    const [roleConstraint] = await connection.query(
+      'SELECT COUNT(*) AS count FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND CONSTRAINT_NAME = ?',
+      [process.env.DB_NAME || 'construction_management', 'users', 'chk_users_role']
+    )
+    if (roleConstraint[0].count === 0) {
+      try {
+        await connection.query("ALTER TABLE users ADD CONSTRAINT chk_users_role CHECK (role IN ('admin', 'user'))")
+      } catch (error) {
+        console.warn('Role check constraint could not be added; application validation remains active.')
+      }
+    }
+
     await connection.query(`
       CREATE TABLE IF NOT EXISTS audit_logs (
         id INT PRIMARY KEY AUTO_INCREMENT,
@@ -39,7 +155,31 @@ export async function connectDB() {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
     `)
 
-    // Seed initial records if table is empty
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS notifications (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        user_id INT NOT NULL,
+        project_id INT NULL,
+        type VARCHAR(50) NOT NULL,
+        message VARCHAR(500) NOT NULL,
+        is_read TINYINT(1) NOT NULL DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+        INDEX idx_notifications_user_read (user_id, is_read),
+        INDEX idx_notifications_project (project_id)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    `)
+
+    const [userCount] = await connection.query('SELECT COUNT(*) AS count FROM users')
+    if (userCount[0].count === 0) {
+      const passwordHash = await hashPassword('Admin@123')
+      await connection.query(
+        'INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)',
+        ['Admin User', 'admin@cms.kh', passwordHash, 'admin']
+      )
+    }
+
     const [existing] = await connection.query('SELECT COUNT(*) as count FROM audit_logs')
     if (existing[0].count === 0) {
       await connection.query(`

@@ -73,7 +73,7 @@
     <nav class="sidebar-nav flex-grow-1 px-2 py-3 overflow-y-auto">
       <div class="d-flex flex-column gap-1">
         <router-link
-          v-for="item in navItems"
+          v-for="item in visibleNavItems"
           :key="item.name"
           :to="item.path"
           class="nav-item-link d-flex align-items-center rounded py-2 text-decoration-none"
@@ -94,7 +94,9 @@
 </template>
 
 <script setup>
-defineProps({
+import { computed } from 'vue'
+
+const props = defineProps({
   isOpen: {
     type: Boolean,
     default: true
@@ -102,6 +104,10 @@ defineProps({
   isCollapsed: {
     type: Boolean,
     default: false
+  },
+  userRole: {
+    type: String,
+    default: 'user'
   }
 })
 
@@ -121,6 +127,7 @@ const navItems = [
   { 
     name: 'Staff Management', 
     path: '/staff', 
+    adminOnly: true,
     svgPath: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z'
   },
   { 
@@ -141,6 +148,7 @@ const navItems = [
   { 
     name: 'Accounting', 
     path: '/accounting', 
+    adminOnly: true,
     svgPath: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
   },
   { 
@@ -152,8 +160,16 @@ const navItems = [
     name: 'Suppliers', 
     path: '/suppliers', 
     svgPath: 'M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z'
+  },
+  {
+    name: 'User Management',
+    path: '/admin/users',
+    adminOnly: true,
+    svgPath: 'M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zm7-1V3m-3 4h6'
   }
 ]
+
+const visibleNavItems = computed(() => navItems.filter(item => !item.adminOnly || props.userRole === 'admin'))
 </script>
 
 <style scoped>

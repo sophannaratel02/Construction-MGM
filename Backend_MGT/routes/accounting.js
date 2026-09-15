@@ -38,21 +38,21 @@ router.get('/:id', async (req, res) => {
 // POST create record
 router.post('/', async (req, res) => {
   try {
-    const { date, description, category, type, amount } = req.body
+    const { date, description, category, type, amount, reference, notes } = req.body
     
-    if (!date || !description || !category || !type || !amount) {
-      return res.status(400).json({ error: 'Missing required fields' })
+    if (!date || !description || !category || !type || amount === undefined || amount === null || amount === '') {
+      return res.status(400).json({ message: 'Date, description, category, type, and amount are required.' })
     }
 
     const pool = getPool()
     const connection = await pool.getConnection()
     const [result] = await connection.query(
-      'INSERT INTO accounting (date, description, category, type, amount) VALUES (?, ?, ?, ?, ?)',
-      [date, description, category, type, amount]
+      'INSERT INTO accounting (date, description, category, type, amount, reference, notes) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [date, description, category, type, amount, reference || null, notes || null]
     )
     connection.release()
     
-    res.status(201).json({ id: result.insertId, date, description, category, type, amount })
+    res.status(201).json({ id: result.insertId, date, description, category, type, amount, reference: reference || null, notes: notes || null })
   } catch (error) {
     console.error('Error creating record:', error)
     res.status(500).json({ error: error.message })
@@ -62,17 +62,26 @@ router.post('/', async (req, res) => {
 // PUT update record
 router.put('/:id', async (req, res) => {
   try {
-    const { date, description, category, type, amount } = req.body
+    const { date, description, category, type, amount, reference, notes } = req.body
+
+    if (!date || !description || !category || !type || amount === undefined || amount === null || amount === '') {
+      return res.status(400).json({ message: 'Date, description, category, type, and amount are required.' })
+    }
     
     const pool = getPool()
     const connection = await pool.getConnection()
-    await connection.query(
-      'UPDATE accounting SET date = ?, description = ?, category = ?, type = ?, amount = ? WHERE id = ?',
-      [date, description, category, type, amount, req.params.id]
+    const [result] = await connection.query(
+      'UPDATE accounting SET date = ?, description = ?, category = ?, type = ?, amount = ?, reference = ?, notes = ? WHERE id = ?',
+      [date, description, category, type, amount, reference || null, notes || null, req.params.id]
     )
+
+    if (result.affectedRows === 0) {
+      connection.release()
+      return res.status(404).json({ message: 'Accounting record not found.' })
+    }
     connection.release()
     
-    res.json({ id: req.params.id, date, description, category, type, amount })
+    res.json({ id: req.params.id, date, description, category, type, amount, reference: reference || null, notes: notes || null })
   } catch (error) {
     console.error('Error updating record:', error)
     res.status(500).json({ error: error.message })
