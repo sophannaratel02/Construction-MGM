@@ -322,11 +322,33 @@ onBeforeUnmount(() => {
 .datepicker-field {
   cursor: pointer !important;
   user-select: none;
+  width: 100% !important;
+  background-color: #0f172a !important;
+  border: 1px solid #334155 !important;
+  color: #ffffff !important;
+  border-radius: 8px !important;
+  padding: 9px 36px 9px 12px !important;
+  font-size: 13px !important;
+  outline: none !important;
+  box-sizing: border-box !important;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.datepicker-field::placeholder {
+  color: #64748b !important;
+}
+
+.datepicker-input-box:hover .datepicker-field,
+.datepicker-input-box.is-focused .datepicker-field {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2) !important;
+  background-color: #0f172a !important;
+  color: #ffffff !important;
 }
 
 .calendar-icon-btn {
   position: absolute;
-  right: 10px;
+  right: 12px;
   color: #94a3b8;
   display: flex;
   align-items: center;

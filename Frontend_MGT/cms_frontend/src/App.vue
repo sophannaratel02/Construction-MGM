@@ -27,6 +27,9 @@
         </div>
       </main>
     </div>
+
+    <!-- Global Project-Matched Alert Toast Notifications -->
+    <AlertToast />
   </div>
 
   <router-view v-else />
@@ -37,7 +40,10 @@ import { computed, onMounted, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Navbar from './components/navbar.vue'
 import Sidebar from './components/sidebar.vue'
+
 import { authApi } from './services/api.js'
+import AlertToast from './components/AlertToast.vue'
+main
 
 const route = useRoute()
 const router = useRouter()

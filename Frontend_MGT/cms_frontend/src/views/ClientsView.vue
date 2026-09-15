@@ -235,6 +235,9 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { clientsApi } from '../services/api'
+import { useAlert } from '../composables/useAlert'
+
+const { showSuccess, showError } = useAlert()
 
 const items = ref([])
 const loading = ref(false)
@@ -311,6 +314,8 @@ const editItem = (item) => {
 const saveItem = async () => {
   saving.value = true
   try {
+    const isEditing = Boolean(editingId.value)
+    const clientName = form.value.companyName || 'Client'
     const payload = { ...form.value }
     if (editingId.value) {
       await clientsApi.update(editingId.value, payload)
@@ -319,9 +324,15 @@ const saveItem = async () => {
     }
     resetForm()
     await load()
+    showSuccess(
+      isEditing
+        ? `Client "${clientName}" updated successfully.`
+        : `Client "${clientName}" registered successfully.`,
+      isEditing ? 'Client Updated' : 'Client Registered'
+    )
   } catch (err) {
     console.error('Failed to save client:', err)
-    alert('Failed to save client account.')
+    showError(err?.response?.data?.message || 'Failed to save client account.')
   } finally {
     saving.value = false
   }
@@ -332,9 +343,10 @@ const deleteItem = async (id) => {
   try {
     await clientsApi.delete(id)
     await load()
+    showSuccess('Client account removed successfully.', 'Client Deleted')
   } catch (err) {
     console.error('Failed to delete client:', err)
-    alert('Failed to delete client.')
+    showError(err?.response?.data?.message || 'Failed to delete client.')
   }
 }
 

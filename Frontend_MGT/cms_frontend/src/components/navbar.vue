@@ -180,8 +180,14 @@
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+
 import { authApi, notificationsApi } from '../services/api'
 import { useRouter } from 'vue-router'
+import { auditLogsApi } from '../services/api'
+import { useAlert } from '../composables/useAlert'
+
+const { showInfo } = useAlert()
+ main
 
 defineEmits(['toggle-sidebar'])
 
@@ -267,6 +273,7 @@ const syncUser = () => {
 
 const handleLogout = async () => {
   showUserMenu.value = false
+
   try {
     await authApi.logout()
   } catch (error) {
@@ -277,6 +284,9 @@ const handleLogout = async () => {
   window.dispatchEvent(new Event('cms-auth-change'))
   syncUser()
   window.location.href = '/login'
+
+  showInfo('You have logged out of MGM Command System.', 'Logged Out')
+ main
 }
 
 // Global keyboard shortcut for Cmd/Ctrl+K

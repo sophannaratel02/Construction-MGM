@@ -255,6 +255,9 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { suppliersApi } from '../services/api'
+import { useAlert } from '../composables/useAlert'
+
+const { showSuccess, showError } = useAlert()
 
 const items = ref([])
 const loading = ref(false)
@@ -336,6 +339,8 @@ const editItem = (item) => {
 const saveItem = async () => {
   saving.value = true
   try {
+    const isEditing = Boolean(editingId.value)
+    const supplierName = form.value.companyName || 'Supplier'
     const payload = { ...form.value }
     if (editingId.value) {
       await suppliersApi.update(editingId.value, payload)
@@ -344,9 +349,15 @@ const saveItem = async () => {
     }
     resetForm()
     await load()
+    showSuccess(
+      isEditing
+        ? `Supplier "${supplierName}" updated successfully.`
+        : `Supplier "${supplierName}" registered successfully.`,
+      isEditing ? 'Supplier Updated' : 'Supplier Registered'
+    )
   } catch (err) {
     console.error('Failed to save supplier:', err)
-    alert('Failed to save supplier record.')
+    showError(err?.response?.data?.message || 'Failed to save supplier record.')
   } finally {
     saving.value = false
   }
@@ -357,9 +368,10 @@ const deleteItem = async (id) => {
   try {
     await suppliersApi.delete(id)
     await load()
+    showSuccess('Supplier removed successfully.', 'Supplier Deleted')
   } catch (err) {
     console.error('Failed to delete supplier:', err)
-    alert('Failed to delete supplier.')
+    showError(err?.response?.data?.message || 'Failed to delete supplier.')
   }
 }
 

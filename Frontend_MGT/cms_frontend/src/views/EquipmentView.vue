@@ -257,6 +257,9 @@
 import { ref, computed, onMounted } from 'vue'
 import { equipmentApi } from '../services/api'
 import CustomDatePicker from '../components/CustomDatePicker.vue'
+import { useAlert } from '../composables/useAlert'
+
+const { showSuccess, showError } = useAlert()
 
 const items = ref([])
 const loading = ref(false)
@@ -334,6 +337,8 @@ const editItem = (item) => {
 const saveItem = async () => {
   saving.value = true
   try {
+    const isEditing = Boolean(editingId.value)
+    const eqName = form.value.name || 'Equipment'
     const payload = { ...form.value }
     if (editingId.value) {
       await equipmentApi.update(editingId.value, payload)
@@ -342,9 +347,15 @@ const saveItem = async () => {
     }
     resetForm()
     await load()
+    showSuccess(
+      isEditing
+        ? `Equipment "${eqName}" updated successfully.`
+        : `Equipment unit "${eqName}" registered successfully.`,
+      isEditing ? 'Equipment Updated' : 'Equipment Added'
+    )
   } catch (err) {
     console.error('Failed to save equipment:', err)
-    alert('Failed to save equipment asset.')
+    showError(err?.response?.data?.message || 'Failed to save equipment asset.')
   } finally {
     saving.value = false
   }
@@ -355,9 +366,10 @@ const deleteItem = async (id) => {
   try {
     await equipmentApi.delete(id)
     await load()
+    showSuccess('Equipment unit removed successfully.', 'Equipment Deleted')
   } catch (err) {
     console.error('Failed to delete equipment:', err)
-    alert('Failed to delete equipment.')
+    showError(err?.response?.data?.message || 'Failed to delete equipment.')
   }
 }
 
