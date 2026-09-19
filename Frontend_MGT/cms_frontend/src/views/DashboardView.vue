@@ -52,23 +52,8 @@
       </div>
     </header>
 
-
-
-    <!-- Alert / Notice Banner (if any) -->
-    <div v-if="noticeMessage" class="dash-notice-banner" :class="noticeType">
-      <div class="notice-body">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"/>
-          <line x1="12" y1="8" x2="12" y2="12"/>
-          <line x1="12" y1="16" x2="12.01" y2="16"/>
-        </svg>
-        <span>{{ noticeMessage }}</span>
-      </div>
-      <button class="notice-dismiss d-flex align-items-center justify-content-center" @click="noticeMessage = ''"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
-    </div>
-
-    <!-- 5 Core KPI Metrics Cards -->
-    <section class="kpi-grid">
+    <!-- 5 Core KPI Metrics Cards (TOP) -->
+    <section class="kpi-grid mb-4">
       <!-- 1. Active Projects -->
       <div class="kpi-card project-card" @click="navigateTo('/projects')">
         <div class="kpi-top">
@@ -203,6 +188,179 @@
       </div>
     </section>
 
+    <!-- Quick Action Shortcuts Toolbar -->
+    <section class="quick-actions-toolbar mb-4">
+      <div class="quick-action-card" @click="navigateTo('/projects')">
+        <div class="action-icon bg-gradient-blue">
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+        </div>
+        <div class="action-info">
+          <span class="action-title">New Project</span>
+          <span class="action-desc">Launch project charter</span>
+        </div>
+      </div>
+
+      <div class="quick-action-card" @click="navigateTo('/materials')">
+        <div class="action-icon bg-gradient-emerald">
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+        </div>
+        <div class="action-info">
+          <span class="action-title">Add Material</span>
+          <span class="action-desc">Submit raw stock entry</span>
+        </div>
+      </div>
+
+      <div class="quick-action-card" @click="navigateTo('/purchase-orders')">
+        <div class="action-icon bg-gradient-purple">
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+        </div>
+        <div class="action-info">
+          <span class="action-title">Issue PO</span>
+          <span class="action-desc">Procurement purchase order</span>
+        </div>
+      </div>
+
+      <div class="quick-action-card" @click="navigateTo('/site-daily-logs')">
+        <div class="action-icon bg-gradient-amber">
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        </div>
+        <div class="action-info">
+          <span class="action-title">Log Site Report</span>
+          <span class="action-desc">Daily site log entry</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Executive Pending Approvals & Action Items Banner Widget -->
+    <div v-if="totalPendingApprovalsCount > 0" class="pending-approvals-banner mb-4">
+      <div class="banner-header">
+        <div class="banner-title-group">
+          <div class="banner-icon-badge">
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+          </div>
+          <div>
+            <div class="banner-headline">
+              <span>Pending Operational Approvals</span>
+              <span class="badge-pending-count">{{ totalPendingApprovalsCount }} Action Items</span>
+            </div>
+            <p class="banner-subtext" v-if="isAdmin">
+              Review and approve pending submissions submitted by field site engineers and staff.
+            </p>
+            <p class="banner-subtext" v-else>
+              You have {{ totalPendingApprovalsCount }} items currently undergoing administrator review & authorization.
+            </p>
+          </div>
+        </div>
+
+        <div class="banner-tabs">
+          <button 
+            type="button"
+            class="banner-tab-btn" 
+            :class="{ active: pendingActiveTab === 'all' }" 
+            @click="pendingActiveTab = 'all'"
+          >
+            All ({{ totalPendingApprovalsCount }})
+          </button>
+          <button 
+            type="button"
+            v-if="pendingMaterialsList.length > 0" 
+            class="banner-tab-btn" 
+            :class="{ active: pendingActiveTab === 'materials' }" 
+            @click="pendingActiveTab = 'materials'"
+          >
+            Materials ({{ pendingMaterialsList.length }})
+          </button>
+          <button 
+            type="button"
+            v-if="pendingProjectsList.length > 0" 
+            class="banner-tab-btn" 
+            :class="{ active: pendingActiveTab === 'projects' }" 
+            @click="pendingActiveTab = 'projects'"
+          >
+            Projects ({{ pendingProjectsList.length }})
+          </button>
+          <button 
+            type="button"
+            v-if="pendingPurchaseOrdersList.length > 0" 
+            class="banner-tab-btn" 
+            :class="{ active: pendingActiveTab === 'pos' }" 
+            @click="pendingActiveTab = 'pos'"
+          >
+            POs ({{ pendingPurchaseOrdersList.length }})
+          </button>
+        </div>
+      </div>
+
+      <!-- Pending Items Cards Grid -->
+      <div class="pending-cards-scroll">
+        <!-- 1. Pending Materials -->
+        <template v-if="pendingActiveTab === 'all' || pendingActiveTab === 'materials'">
+          <div v-for="mat in pendingMaterialsList" :key="'mat-' + mat.id" class="pending-item-card mat-border">
+            <div class="card-item-top">
+              <span class="module-chip mat-chip">Material</span>
+              <span class="time-badge">Pending Review</span>
+            </div>
+            <div class="card-item-body">
+              <div class="item-name">{{ mat.name }}</div>
+              <div class="item-meta">Category: {{ mat.category }} • Qty: {{ mat.quantity }} {{ mat.unit }}</div>
+              <div class="item-supplier" v-if="mat.supplier">Supplier: {{ mat.supplier }}</div>
+            </div>
+            <div class="card-item-actions">
+              <button v-if="isAdmin" type="button" @click.stop="approveMaterialDirectly(mat)" class="btn-quick-approve" title="Approve Material">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="me-1"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                Approve
+              </button>
+              <button type="button" @click="navigateTo('/materials')" class="btn-quick-view">View Details</button>
+            </div>
+          </div>
+        </template>
+
+        <!-- 2. Pending Projects -->
+        <template v-if="pendingActiveTab === 'all' || pendingActiveTab === 'projects'">
+          <div v-for="proj in pendingProjectsList" :key="'proj-' + proj.id" class="pending-item-card proj-border">
+            <div class="card-item-top">
+              <span class="module-chip proj-chip">Project</span>
+              <span class="time-badge">Pending Review</span>
+            </div>
+            <div class="card-item-body">
+              <div class="item-name">{{ proj.name }}</div>
+              <div class="item-meta">Client: {{ proj.client }} • Budget: {{ formatCurrency(proj.budget) }}</div>
+            </div>
+            <div class="card-item-actions">
+              <button v-if="isAdmin" type="button" @click.stop="approveProjectDirectly(proj)" class="btn-quick-approve" title="Approve Project">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="me-1"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                Approve
+              </button>
+              <button type="button" @click="navigateTo('/projects')" class="btn-quick-view">View Details</button>
+            </div>
+          </div>
+        </template>
+
+        <!-- 3. Pending Purchase Orders -->
+        <template v-if="pendingActiveTab === 'all' || pendingActiveTab === 'pos'">
+          <div v-for="po in pendingPurchaseOrdersList" :key="'po-' + po.id" class="pending-item-card po-border">
+            <div class="card-item-top">
+              <span class="module-chip po-chip">Purchase Order</span>
+              <span class="time-badge">Pending Review</span>
+            </div>
+            <div class="card-item-body">
+              <div class="item-name">{{ po.po_number }}</div>
+              <div class="item-meta">Supplier: {{ po.supplierName || 'Vendor' }} • Total: {{ formatCurrency(po.total_amount) }}</div>
+            </div>
+            <div class="card-item-actions">
+              <button v-if="isAdmin" type="button" @click.stop="approvePurchaseOrderDirectly(po)" class="btn-quick-approve" title="Approve PO">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="me-1"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                Approve
+              </button>
+              <button type="button" @click="navigateTo('/purchase-orders')" class="btn-quick-view">View Details</button>
+            </div>
+          </div>
+        </template>
+      </div>
+    </div>
+
     <!-- Visual Charts Row 1: Project Distribution & Task Execution -->
     <section class="charts-row primary-visuals">
       <!-- Chart A: Interactive Analytics Suite (Tab Switcher) -->
@@ -240,7 +398,7 @@
         </div>
 
         <!-- Mode 1: Donut Portfolio Status -->
-        <div v-show="activeChartTab === 'donut'">
+        <div v-show="activeChartTab === 'donut'" class="donut-mode-layout">
           <div class="donut-chart-wrapper">
             <div class="donut-center-info">
               <span class="center-count">{{ summary.projectsList.length }}</span>
@@ -249,15 +407,15 @@
             <canvas ref="projectStatusCanvas"></canvas>
           </div>
 
-          <div class="status-summary-list">
-            <div class="status-item-row" v-for="stat in projectStatusSegments" :key="stat.label">
-              <div class="status-name">
+          <div class="status-summary-grid">
+            <div class="status-card-item" v-for="stat in projectStatusSegments" :key="stat.label">
+              <div class="status-card-top">
                 <span class="color-dot" :style="{ backgroundColor: stat.color }"></span>
-                <span>{{ stat.label }}</span>
+                <span class="status-card-label">{{ stat.label }}</span>
               </div>
-              <div class="status-figures">
-                <strong>{{ stat.count }}</strong>
-                <span class="status-pct">({{ stat.percentage }}%)</span>
+              <div class="status-card-bottom">
+                <strong class="status-card-count">{{ stat.count }}</strong>
+                <span class="status-card-pct" :style="{ color: stat.color, backgroundColor: stat.color + '18' }">{{ stat.percentage }}%</span>
               </div>
             </div>
           </div>
@@ -565,8 +723,10 @@ import {
   tasksApi,
   materialsApi,
   accountingApi,
-  auditLogsApi
+  auditLogsApi,
+  purchaseOrdersApi
 } from '../services/api'
+import { useAlert } from '../composables/useAlert'
 import {
   Chart,
   LineController,
@@ -600,6 +760,12 @@ Chart.register(
 )
 
 const router = useRouter()
+const { showSuccess, showError } = useAlert()
+
+const userObj = computed(() => {
+  try { return JSON.parse(localStorage.getItem('cms_user') || '{}') } catch { return {} }
+})
+const isAdmin = computed(() => userObj.value.role === 'admin')
 
 // Canvas Refs
 const financeChartCanvas = ref(null)
@@ -619,6 +785,7 @@ const noticeType = ref('notice-info')
 const projectFilter = ref('All')
 const financeRange = ref('6m')
 const activeChartTab = ref('donut')
+const pendingActiveTab = ref('all')
 
 const switchTabToCashflow = () => {
   activeChartTab.value = 'cashflow'
@@ -640,6 +807,58 @@ const rawEquipment = ref([])
 const rawTasks = ref([])
 const rawMaterials = ref([])
 const rawAccounting = ref([])
+const rawPurchaseOrders = ref([])
+
+// Pending Approvals & Action Items Aggregates
+const pendingMaterialsList = computed(() => {
+  return rawMaterials.value.filter(m => (m.status || '').toLowerCase() === 'pending')
+})
+
+const pendingProjectsList = computed(() => {
+  return rawProjects.value.filter(p => (p.status || '').toLowerCase().includes('pending'))
+})
+
+const pendingPurchaseOrdersList = computed(() => {
+  return rawPurchaseOrders.value.filter(po => (po.status || '').toLowerCase() === 'pending')
+})
+
+const totalPendingApprovalsCount = computed(() => {
+  return pendingMaterialsList.value.length + pendingProjectsList.value.length + pendingPurchaseOrdersList.value.length
+})
+
+const approveMaterialDirectly = async (item) => {
+  try {
+    await materialsApi.approve(item.id)
+    showSuccess(`Material "${item.name}" approved.`, 'Material Approved')
+    await loadDashboardData()
+  } catch (err) {
+    console.error('Failed to approve material:', err)
+    showError(err?.response?.data?.message || 'Failed to approve material.')
+  }
+}
+
+const approveProjectDirectly = async (item) => {
+  try {
+    await projectsApi.approve(item.id)
+    showSuccess(`Project "${item.name}" approved.`, 'Project Approved')
+    await loadDashboardData()
+  } catch (err) {
+    console.error('Failed to approve project:', err)
+    showError(err?.response?.data?.message || 'Failed to approve project.')
+  }
+}
+
+const approvePurchaseOrderDirectly = async (item) => {
+  try {
+    const payload = { ...item, status: 'Approved' }
+    await purchaseOrdersApi.update(item.id, payload)
+    showSuccess(`Purchase Order "${item.po_number}" approved.`, 'PO Approved')
+    await loadDashboardData()
+  } catch (err) {
+    console.error('Failed to approve PO:', err)
+    showError(err?.response?.data?.message || 'Failed to approve PO.')
+  }
+}
 
 // Computed Dashboard Aggregates
 const summary = computed(() => {
@@ -753,14 +972,15 @@ const loadDashboardData = async () => {
   noticeMessage.value = ''
 
   try {
-    const [statsRes, projRes, staffRes, equipRes, tasksRes, materialsRes, accountingRes] = await Promise.allSettled([
+    const [statsRes, projRes, staffRes, equipRes, tasksRes, materialsRes, accountingRes, poRes] = await Promise.allSettled([
       dashboardApi.getStats(),
       projectsApi.getAll(),
       staffApi.getAll(),
       equipmentApi.getAll(),
       tasksApi.getAll(),
       materialsApi.getAll(),
-      accountingApi.getAll()
+      accountingApi.getAll(),
+      purchaseOrdersApi.getAll()
     ])
 
     let anySuccess = false
@@ -797,6 +1017,11 @@ const loadDashboardData = async () => {
 
     if (accountingRes.status === 'fulfilled' && Array.isArray(accountingRes.value?.data)) {
       rawAccounting.value = accountingRes.value.data
+      anySuccess = true
+    }
+
+    if (poRes.status === 'fulfilled' && Array.isArray(poRes.value?.data)) {
+      rawPurchaseOrders.value = poRes.value.data
       anySuccess = true
     }
 
@@ -1061,12 +1286,18 @@ const renderTaskPriorityChart = () => {
         x: {
           stacked: true,
           grid: { display: false },
-          ticks: { color: '#64748b', font: { size: 12 } }
+          ticks: { color: '#64748b', font: { size: 12, weight: '600' } }
         },
         y: {
           stacked: true,
-          grid: { color: 'rgba(226, 232, 240, 0.8)' },
-          ticks: { stepSize: 2, color: '#64748b' }
+          beginAtZero: true,
+          grid: { color: '#f1f5f9' },
+          ticks: {
+            stepSize: 1,
+            precision: 0,
+            color: '#64748b',
+            font: { size: 12, weight: '500' }
+          }
         }
       }
     }
@@ -1775,10 +2006,18 @@ onBeforeUnmount(() => {
 }
 
 /* Donut Box */
+.donut-mode-layout {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding-top: 6px;
+}
+
 .donut-chart-wrapper {
   position: relative;
-  width: 100%;
-  height: 220px;
+  width: 190px;
+  height: 190px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1807,42 +2046,62 @@ onBeforeUnmount(() => {
   font-weight: 500;
 }
 
-.status-summary-list {
+.status-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  flex-grow: 1;
+}
+
+.status-card-item {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px 12px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-top: 14px;
-  padding-top: 12px;
-  border-top: 1px solid #f1f5f9;
+  gap: 6px;
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
 }
 
-.status-item-row {
+.status-card-item:hover {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.04);
+}
+
+.status-card-top {
   display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.status-card-label {
+  font-size: 11.5px;
+  color: #64748b;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.status-card-bottom {
+  display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: center;
-  font-size: 12.5px;
 }
 
-.status-name {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #334155;
-}
-
-.color-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-}
-
-.status-figures strong {
+.status-card-count {
+  font-size: 17px;
+  font-weight: 800;
   color: #0f172a;
 }
 
-.status-pct {
-  color: #94a3b8;
-  margin-left: 4px;
+.status-card-pct {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 6px;
 }
 
 /* Equipment Visual Box */
@@ -2452,6 +2711,269 @@ onBeforeUnmount(() => {
 .small-pills .filter-pill {
   padding: 3px 8px;
   font-size: 11px;
+}
+
+/* =========================================================
+   EXECUTIVE PENDING APPROVALS BANNER WIDGET (LIGHT UI)
+========================================================= */
+.pending-approvals-banner {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.03);
+  color: #0f172a;
+}
+
+.banner-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 14px;
+}
+
+.banner-title-group {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.banner-icon-badge {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+  color: #d97706;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.banner-headline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16.5px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.badge-pending-count {
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fde68a;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 9px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.banner-subtext {
+  margin: 3px 0 0;
+  font-size: 12.5px;
+  color: #64748b;
+}
+
+.banner-tabs {
+  display: flex;
+  gap: 4px;
+  background: #f1f5f9;
+  padding: 3px;
+  border-radius: 10px;
+}
+
+.banner-tab-btn {
+  border: none;
+  background: transparent;
+  color: #64748b;
+  padding: 6px 13px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.banner-tab-btn.active {
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.banner-tab-btn:hover:not(.active) {
+  color: #0f172a;
+}
+
+.pending-cards-scroll {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 14px;
+}
+
+.pending-item-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 15px 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.pending-item-card:hover {
+  transform: translateY(-2px);
+  background: #ffffff;
+  border-color: #cbd5e1;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
+}
+
+.mat-border { border-left: 4px solid #2563eb; }
+.proj-border { border-left: 4px solid #10b981; }
+.po-border { border-left: 4px solid #7c3aed; }
+
+.card-item-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.module-chip {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2.5px 8px;
+  border-radius: 6px;
+  text-transform: uppercase;
+}
+
+.mat-chip { background: #dbeafe; color: #1e40af; }
+.proj-chip { background: #d1fae5; color: #065f46; }
+.po-chip { background: #ede9fe; color: #5b21b6; }
+
+.time-badge { font-size: 11.5px; color: #b45309; font-weight: 600; }
+
+.item-name { font-size: 14px; font-weight: 800; color: #0f172a; margin-bottom: 4px; }
+.item-meta { font-size: 12.5px; color: #475569; font-weight: 500; }
+.item-supplier { font-size: 12px; color: #64748b; margin-top: 3px; }
+
+.card-item-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.btn-quick-approve {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #fff;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-quick-approve:hover {
+  background: linear-gradient(135deg, #059669, #047857);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+}
+
+.btn-quick-view {
+  background: #ffffff;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.btn-quick-view:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+/* =========================================================
+   QUICK ACTIONS TOOLBAR
+========================================================= */
+.quick-actions-toolbar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.quick-action-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.02);
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.quick-action-card:hover {
+  transform: translateY(-2px);
+  border-color: #cbd5e1;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+}
+
+.action-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+}
+
+.bg-gradient-blue { background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: #ffffff; }
+.bg-gradient-emerald { background: linear-gradient(135deg, #10b981, #047857); color: #ffffff; }
+.bg-gradient-purple { background: linear-gradient(135deg, #8b5cf6, #6d28d9); color: #ffffff; }
+.bg-gradient-amber { background: linear-gradient(135deg, #f59e0b, #d97706); color: #ffffff; }
+.bg-gradient-cyan { background: linear-gradient(135deg, #06b6d4, #0891b2); color: #ffffff; }
+
+.action-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.action-title {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+.action-desc {
+  font-size: 11.5px;
+  color: #64748b;
+  margin-top: 2px;
 }
 
 </style>

@@ -37,19 +37,76 @@
     </section>
 
     <Teleport to="body">
-      <div v-if="showForm" class="modal-backdrop-custom" @click.self="closeForm">
-        <form class="user-form" @submit.prevent="saveUser">
-          <h2>{{ editingId ? 'Edit User' : 'Create User' }}</h2>
-          <label>Name<input v-model.trim="form.name" required /></label>
-          <label>Email<input v-model.trim="form.email" type="email" required /></label>
-          <label v-if="!editingId">Password<input v-model="form.password" type="password" required /></label>
-          <label v-else>New password (optional)<input v-model="form.password" type="password" /></label>
-          <label>Role<select v-model="form.role"><option value="user">User</option><option value="admin">Admin</option></select></label>
-          <label class="check-row"><input v-model="form.is_active" type="checkbox" /> Active account</label>
-          <p v-if="formError" class="form-error">{{ formError }}</p>
-          <div class="form-actions"><button class="btn btn-secondary" type="button" @click="closeForm">Cancel</button><button class="btn btn-primary" type="submit" :disabled="saving">{{ saving ? 'Saving...' : 'Save' }}</button></div>
-        </form>
-      </div>
+      <Transition name="fade">
+        <div v-if="showForm" class="modal-backdrop staff-style-modal" @click.self="closeForm">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">{{ editingId ? 'Edit User Profile' : 'Create User Account' }}</h5>
+                <button type="button" class="btn-close-white d-flex align-items-center justify-content-center" @click="closeForm" aria-label="Close">
+                  <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <form @submit.prevent="saveUser">
+                <div class="modal-body">
+                  <div class="form-row mb-3">
+                    <div class="col">
+                      <label class="form-label">Full Name <span class="text-danger">*</span></label>
+                      <input v-model.trim="form.name" class="form-control" placeholder="e.g. Sokha Chan" required />
+                    </div>
+                    <div class="col">
+                      <label class="form-label">Email Address <span class="text-danger">*</span></label>
+                      <input v-model.trim="form.email" type="email" class="form-control" placeholder="user@cms.kh" required />
+                    </div>
+                  </div>
+
+                  <div class="form-row mb-3">
+                    <div class="col">
+                      <label class="form-label">{{ editingId ? 'New Password' : 'Password *' }}</label>
+                      <input
+                        v-model="form.password"
+                        type="password"
+                        class="form-control"
+                        :placeholder="editingId ? 'Leave blank to keep current' : '••••••••'"
+                        :required="!editingId"
+                      />
+                    </div>
+                    <div class="col">
+                      <label class="form-label">System Role</label>
+                      <CustomSelect
+                        v-model="form.role"
+                        :options="[
+                          { value: 'user', label: 'User' },
+                          { value: 'admin', label: 'Admin' }
+                        ]"
+                        placeholder="Select Role"
+                        :allowClear="false"
+                      />
+                    </div>
+                  </div>
+
+                  <div class="form-group mb-3">
+                    <label class="toggle-checkbox-label">
+                      <input v-model="form.is_active" type="checkbox" class="custom-checkbox" />
+                      <span>Active Account Status</span>
+                    </label>
+                  </div>
+
+                  <p v-if="formError" class="form-error mb-3">{{ formError }}</p>
+                </div>
+
+                <div class="modal-footer">
+                  <button class="btn-cancel" type="button" @click="closeForm">Cancel</button>
+                  <button class="btn-save" type="submit" :disabled="saving">{{ saving ? 'Saving...' : 'Save User' }}</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </Transition>
     </Teleport>
   </div>
 </template>
@@ -57,6 +114,7 @@
 <script setup>
 import { onMounted, reactive, ref } from 'vue'
 import { adminUsersApi } from '../services/api.js'
+import CustomSelect from '../components/CustomSelect.vue'
 
 const users = ref([])
 const loading = ref(false)
@@ -131,13 +189,8 @@ h1 { margin: 0; font-size: 2rem; font-weight: 800; }
 .role-badge { display: inline-block; padding: 4px 9px; border-radius: 999px; font-size: .75rem; font-weight: 700; text-transform: uppercase; }
 .role-badge.admin { color: #1d4ed8; background: #dbeafe; }
 .role-badge.user { color: #047857; background: #d1fae5; }
-.modal-backdrop-custom { position: fixed; inset: 0; z-index: 1100; display: grid; place-items: center; padding: 20px; background: rgba(15, 23, 42, .65); }
-.user-form { width: min(100%, 480px); display: grid; gap: 14px; padding: 24px; background: #fff; border-radius: 12px; }
-.user-form h2 { margin: 0 0 4px; }
-.user-form label { display: grid; gap: 6px; font-weight: 600; color: #334155; }
-.user-form input, .user-form select { min-height: 40px; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; }
-.check-row { display: flex !important; grid-template-columns: none; align-items: center; }
-.check-row input { min-height: auto; }
-.form-actions { display: flex; justify-content: flex-end; gap: 8px; }
-.form-error { margin: 0; color: #b91c1c; }
+.check-row { display: flex !important; align-items: center; cursor: pointer; }
+.toggle-checkbox-label { display: inline-flex; align-items: center; gap: 10px; color: #cbd5e1; font-size: 0.88rem; font-weight: 500; cursor: pointer; user-select: none; margin-top: 4px; }
+.custom-checkbox { width: 18px !important; height: 18px !important; accent-color: #2563eb; cursor: pointer; }
+.form-error { margin: 0; color: #f87171; font-size: 0.85rem; font-weight: 500; }
 </style>

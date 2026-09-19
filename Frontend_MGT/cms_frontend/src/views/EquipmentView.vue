@@ -188,14 +188,12 @@
                   <div class="form-row mb-3">
                     <div class="col">
                       <label class="form-label">Machinery Type *</label>
-                      <select v-model="form.type" class="form-control">
-                        <option value="Excavator">Excavator</option>
-                        <option value="Crane">Crane</option>
-                        <option value="Concrete Pump">Concrete Pump</option>
-                        <option value="Loader">Loader</option>
-                        <option value="Mixer">Mixer</option>
-                        <option value="Forklift">Forklift</option>
-                      </select>
+                      <CustomSelect
+                        v-model="form.type"
+                        :options="['Excavator', 'Crane', 'Concrete Pump', 'Loader', 'Mixer', 'Forklift']"
+                        placeholder="Select Type"
+                        :allowClear="false"
+                      />
                     </div>
 
                     <div class="col">
@@ -207,16 +205,21 @@
                   <div class="form-row mb-3">
                     <div class="col">
                       <label class="form-label">Operational Status</label>
-                      <select v-model="form.status" class="form-control">
-                        <option value="Available">Available</option>
-                        <option value="In Use">In Use</option>
-                        <option value="Maintenance">Maintenance</option>
-                      </select>
+                      <CustomSelect
+                        v-model="form.status"
+                        :options="['Available', 'In Use', 'Maintenance']"
+                        placeholder="Select Status"
+                        :allowClear="false"
+                      />
                     </div>
 
                     <div class="col">
-                      <label class="form-label">Current Site Location</label>
-                      <input v-model="form.location" type="text" class="form-control" placeholder="e.g. BKK1 Site, Phnom Penh" />
+                      <label class="form-label">Current Site Location / Project</label>
+                      <CustomSelect
+                        v-model="form.project_id"
+                        :options="projectsList"
+                        placeholder="Central Yard / Unassigned"
+                      />
                     </div>
                   </div>
 
@@ -255,13 +258,15 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { equipmentApi } from '../services/api'
+import { equipmentApi, projectsApi } from '../services/api'
 import CustomDatePicker from '../components/CustomDatePicker.vue'
+import CustomSelect from '../components/CustomSelect.vue'
 import { useAlert } from '../composables/useAlert'
 
 const { showSuccess, showError } = useAlert()
 
 const items = ref([])
+const projectsList = ref([])
 const loading = ref(false)
 const saving = ref(false)
 const showAddForm = ref(false)
@@ -277,6 +282,7 @@ const initialFormState = () => ({
   purchaseDate: '',
   cost: 0,
   location: '',
+  project_id: null,
   description: ''
 })
 
@@ -302,9 +308,13 @@ const filteredItems = computed(() => {
 const load = async () => {
   loading.value = true
   try {
-    const res = await equipmentApi.getAll()
-    if (Array.isArray(res?.data)) {
-      items.value = res.data
+    const [eqRes, projRes] = await Promise.all([
+      equipmentApi.getAll(),
+      projectsApi.getAll()
+    ])
+    projectsList.value = projRes?.data || []
+    if (Array.isArray(eqRes?.data)) {
+      items.value = eqRes.data
     }
   } catch (err) {
     console.error('Failed to load equipment:', err)
@@ -451,22 +461,6 @@ onMounted(load)
 .btn-action.edit:hover { background: #eff6ff; color: #2563eb; border-color: #bfdbfe; }
 .btn-action.delete:hover { background: #fff1f2; color: #e11d48; border-color: #fecdd3; }
 .text-right { text-align: right; }
-
-.modal-backdrop { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); z-index: 1050; display: flex; align-items: center; justify-content: center; }
-.modal-dialog { width: min(100% - 2rem, 520px); }
-.modal-content { background: #1e293b; color: #f8fafc; border-radius: 14px; border: 1px solid rgba(255,255,255,0.1); padding: 20px; }
-.modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; margin-bottom: 16px; }
-.modal-title { font-size: 17px; font-weight: 700; color: #fff; margin: 0; }
-.btn-close-white { background: transparent; border: none; color: #94a3b8; font-size: 18px; cursor: pointer; }
-.form-group { display: flex; flex-direction: column; gap: 6px; }
-.form-row { display: flex; gap: 12px; }
-.form-row .col { flex: 1; display: flex; flex-direction: column; gap: 6px; }
-.form-label { font-size: 12px; font-weight: 600; color: #cbd5e1; }
-.form-control { background: #0f172a; border: 1px solid #334155; color: #fff; padding: 9px 12px; border-radius: 8px; font-size: 13px; outline: none; }
-.form-control:focus { border-color: #3b82f6; }
-.modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.1); }
-.btn-cancel { background: transparent; border: 1px solid #475569; color: #cbd5e1; padding: 8px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; }
-.btn-save { background: #2563eb; border: none; color: #fff; padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
 
 .state-box, .empty-state { text-align: center; padding: 40px; color: #64748b; }
 .spinner { width: 24px; height: 24px; border: 3px solid #e2e8f0; border-top-color: #2563eb; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 10px; }

@@ -8,7 +8,12 @@ router.get('/', async (req, res) => {
   try {
     const pool = getPool()
     const connection = await pool.getConnection()
-    const [equipment] = await connection.query('SELECT * FROM equipment ORDER BY id DESC')
+    const [equipment] = await connection.query(`
+      SELECT e.*, p.name AS projectName
+      FROM equipment e
+      LEFT JOIN projects p ON e.project_id = p.id
+      ORDER BY e.id DESC
+    `)
     connection.release()
     res.json(equipment)
   } catch (error) {
@@ -22,7 +27,12 @@ router.get('/:id', async (req, res) => {
   try {
     const pool = getPool()
     const connection = await pool.getConnection()
-    const [equipment] = await connection.query('SELECT * FROM equipment WHERE id = ?', [req.params.id])
+    const [equipment] = await connection.query(`
+      SELECT e.*, p.name AS projectName
+      FROM equipment e
+      LEFT JOIN projects p ON e.project_id = p.id
+      WHERE e.id = ?
+    `, [req.params.id])
     connection.release()
     
     if (equipment.length === 0) {
@@ -38,7 +48,7 @@ router.get('/:id', async (req, res) => {
 // POST create equipment
 router.post('/', async (req, res) => {
   try {
-    const { name, type, serialNumber, status, purchaseDate, cost, location, description } = req.body
+    const { name, type, serialNumber, status, purchaseDate, cost, location, project_id, description } = req.body
     
     if (!name || !type || !serialNumber || !status || !purchaseDate || cost === undefined || cost === null || cost === '') {
       return res.status(400).json({ message: 'Name, type, serial number, status, purchase date, and cost are required.' })
@@ -47,12 +57,12 @@ router.post('/', async (req, res) => {
     const pool = getPool()
     const connection = await pool.getConnection()
     const [result] = await connection.query(
-      'INSERT INTO equipment (name, type, serialNumber, status, purchaseDate, cost, location, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [name, type, serialNumber, status, purchaseDate, cost, location || null, description || null]
+      'INSERT INTO equipment (name, type, serialNumber, status, purchaseDate, cost, location, project_id, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [name, type, serialNumber, status, purchaseDate, cost, location || null, project_id || null, description || null]
     )
     connection.release()
     
-    res.status(201).json({ id: result.insertId, name, type, serialNumber, status, purchaseDate, cost, location: location || null, description: description || null })
+    res.status(201).json({ id: result.insertId, name, type, serialNumber, status, purchaseDate, cost, location: location || null, project_id: project_id || null, description: description || null })
   } catch (error) {
     console.error('Error creating equipment:', error)
     res.status(500).json({ error: error.message })
@@ -62,7 +72,7 @@ router.post('/', async (req, res) => {
 // PUT update equipment
 router.put('/:id', async (req, res) => {
   try {
-    const { name, type, serialNumber, status, purchaseDate, cost, location, description } = req.body
+    const { name, type, serialNumber, status, purchaseDate, cost, location, project_id, description } = req.body
 
     if (!name || !type || !serialNumber || !status || !purchaseDate || cost === undefined || cost === null || cost === '') {
       return res.status(400).json({ message: 'Name, type, serial number, status, purchase date, and cost are required.' })
@@ -71,8 +81,8 @@ router.put('/:id', async (req, res) => {
     const pool = getPool()
     const connection = await pool.getConnection()
     const [result] = await connection.query(
-      'UPDATE equipment SET name = ?, type = ?, serialNumber = ?, status = ?, purchaseDate = ?, cost = ?, location = ?, description = ? WHERE id = ?',
-      [name, type, serialNumber, status, purchaseDate, cost, location || null, description || null, req.params.id]
+      'UPDATE equipment SET name = ?, type = ?, serialNumber = ?, status = ?, purchaseDate = ?, cost = ?, location = ?, project_id = ?, description = ? WHERE id = ?',
+      [name, type, serialNumber, status, purchaseDate, cost, location || null, project_id || null, description || null, req.params.id]
     )
 
     if (result.affectedRows === 0) {
@@ -81,7 +91,7 @@ router.put('/:id', async (req, res) => {
     }
     connection.release()
     
-    res.json({ id: req.params.id, name, type, serialNumber, status, purchaseDate, cost, location: location || null, description: description || null })
+    res.json({ id: req.params.id, name, type, serialNumber, status, purchaseDate, cost, location: location || null, project_id: project_id || null, description: description || null })
   } catch (error) {
     console.error('Error updating equipment:', error)
     res.status(500).json({ error: error.message })

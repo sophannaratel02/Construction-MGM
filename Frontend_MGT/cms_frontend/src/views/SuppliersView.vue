@@ -192,13 +192,12 @@
                   <div class="form-row mb-3">
                     <div class="col">
                       <label class="form-label">Product Category *</label>
-                      <select v-model="form.productCategory" class="form-control">
-                        <option value="Building Materials">Building Materials</option>
-                        <option value="Steel & Rebar">Steel & Rebar</option>
-                        <option value="Aggregates & Stone">Aggregates & Stone</option>
-                        <option value="Plumbing & Electrical">Plumbing & Electrical</option>
-                        <option value="Heavy Machinery">Heavy Machinery</option>
-                      </select>
+                      <CustomSelect
+                        v-model="form.productCategory"
+                        :options="['Building Materials', 'Steel & Rebar', 'Aggregates & Stone', 'Plumbing & Electrical', 'Heavy Machinery']"
+                        placeholder="Select Category"
+                        :allowClear="false"
+                      />
                     </div>
 
                     <div class="col">
@@ -256,6 +255,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { suppliersApi } from '../services/api'
 import { useAlert } from '../composables/useAlert'
+import CustomSelect from '../components/CustomSelect.vue'
 
 const { showSuccess, showError } = useAlert()
 
@@ -464,22 +464,6 @@ onMounted(load)
 .btn-action.edit:hover { background: #eff6ff; color: #2563eb; border-color: #bfdbfe; }
 .btn-action.delete:hover { background: #fff1f2; color: #e11d48; border-color: #fecdd3; }
 .text-right { text-align: right; }
-
-.modal-backdrop { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); z-index: 1050; display: flex; align-items: center; justify-content: center; }
-.modal-dialog { width: min(100% - 2rem, 520px); }
-.modal-content { background: #1e293b; color: #f8fafc; border-radius: 14px; border: 1px solid rgba(255,255,255,0.1); padding: 20px; }
-.modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; margin-bottom: 16px; }
-.modal-title { font-size: 17px; font-weight: 700; color: #fff; margin: 0; }
-.btn-close-white { background: transparent; border: none; color: #94a3b8; font-size: 18px; cursor: pointer; }
-.form-group { display: flex; flex-direction: column; gap: 6px; }
-.form-row { display: flex; gap: 12px; }
-.form-row .col { flex: 1; display: flex; flex-direction: column; gap: 6px; }
-.form-label { font-size: 12px; font-weight: 600; color: #cbd5e1; }
-.form-control { background: #0f172a; border: 1px solid #334155; color: #fff; padding: 9px 12px; border-radius: 8px; font-size: 13px; outline: none; }
-.form-control:focus { border-color: #3b82f6; }
-.modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.1); }
-.btn-cancel { background: transparent; border: 1px solid #475569; color: #cbd5e1; padding: 8px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; }
-.btn-save { background: #2563eb; border: none; color: #fff; padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
 
 .state-box, .empty-state { text-align: center; padding: 40px; color: #64748b; }
 .spinner { width: 24px; height: 24px; border: 3px solid #e2e8f0; border-top-color: #2563eb; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 10px; }

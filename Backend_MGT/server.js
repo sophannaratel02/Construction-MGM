@@ -18,6 +18,8 @@ import dashboardRouter from './routes/dashboard.js'
 import auditLogsRouter from './routes/auditLogs.js'
 import adminUsersRouter from './routes/adminUsers.js'
 import notificationsRouter from './routes/notifications.js'
+import purchaseOrdersRouter from './routes/purchaseOrders.js'
+import siteDailyLogsRouter from './routes/siteDailyLogs.js'
 
 dotenv.config()
 
@@ -34,9 +36,7 @@ const publicRoutes = [
 
 const mutationRoutes = new Set([
   '/api/staff',
-  '/api/materials',
   '/api/equipment',
-  '/api/tasks',
   '/api/accounting',
   '/api/clients',
   '/api/suppliers',
@@ -97,11 +97,27 @@ app.use('/api/tasks', tasksRouter)
 app.use('/api/accounting', accountingRouter)
 app.use('/api/clients', clientsRouter)
 app.use('/api/suppliers', suppliersRouter)
+app.use('/api/purchase-orders', purchaseOrdersRouter)
+app.use('/api/site-daily-logs', siteDailyLogsRouter)
 app.use('/api/dashboard', dashboardRouter)
 app.use('/api/audit-logs', auditLogsRouter)
 
+const runMigrations = async () => {
+  try {
+    const pool = getPool()
+    const [cols] = await pool.query("SHOW COLUMNS FROM materials LIKE 'status'")
+    if (!cols || cols.length === 0) {
+      await pool.query("ALTER TABLE materials ADD COLUMN status VARCHAR(50) NOT NULL DEFAULT 'Approved'")
+      console.log("Migration: added status column to materials table.")
+    }
+  } catch (err) {
+    console.error("Migration notice:", err.message)
+  }
+}
+
 const startServer = async () => {
   await connectDB()
+  await runMigrations()
   app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`)
   })

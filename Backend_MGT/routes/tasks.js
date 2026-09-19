@@ -8,7 +8,13 @@ router.get('/', async (req, res) => {
   try {
     const pool = getPool()
     const connection = await pool.getConnection()
-    const [tasks] = await connection.query('SELECT * FROM tasks ORDER BY id DESC')
+    const [tasks] = await connection.query(`
+      SELECT t.*, p.name AS projectName, st.name AS assignedStaffName, st.role AS assignedStaffRole
+      FROM tasks t
+      LEFT JOIN projects p ON t.project_id = p.id
+      LEFT JOIN staff st ON t.assigned_staff_id = st.id
+      ORDER BY t.id DESC
+    `)
     connection.release()
     res.json(tasks)
   } catch (error) {
@@ -22,7 +28,13 @@ router.get('/:id', async (req, res) => {
   try {
     const pool = getPool()
     const connection = await pool.getConnection()
-    const [tasks] = await connection.query('SELECT * FROM tasks WHERE id = ?', [req.params.id])
+    const [tasks] = await connection.query(`
+      SELECT t.*, p.name AS projectName, st.name AS assignedStaffName, st.role AS assignedStaffRole
+      FROM tasks t
+      LEFT JOIN projects p ON t.project_id = p.id
+      LEFT JOIN staff st ON t.assigned_staff_id = st.id
+      WHERE t.id = ?
+    `, [req.params.id])
     connection.release()
     
     if (tasks.length === 0) {
@@ -38,21 +50,32 @@ router.get('/:id', async (req, res) => {
 // POST create task
 router.post('/', async (req, res) => {
   try {
-    const { title, project, assignedTo, status, priority, dueDate, progress, description } = req.body
+    let { title, project, project_id, assignedTo, assigned_staff_id, status, priority, dueDate, progress, description } = req.body
     
+    const pool = getPool()
+    const connection = await pool.getConnection()
+
+    if (!project && project_id) {
+      const [pRows] = await connection.query('SELECT name FROM projects WHERE id = ?', [project_id])
+      if (pRows.length) project = pRows[0].name
+    }
+    if (!assignedTo && assigned_staff_id) {
+      const [sRows] = await connection.query('SELECT name FROM staff WHERE id = ?', [assigned_staff_id])
+      if (sRows.length) assignedTo = sRows[0].name
+    }
+
     if (!title || !project || !assignedTo || !status || !priority || !dueDate) {
+      connection.release()
       return res.status(400).json({ message: 'Title, project, assignee, status, priority, and due date are required.' })
     }
 
-    const pool = getPool()
-    const connection = await pool.getConnection()
     const [result] = await connection.query(
-      'INSERT INTO tasks (title, project, assignedTo, status, priority, dueDate, progress, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [title, project, assignedTo, status, priority, dueDate, progress ?? 0, description || null]
+      'INSERT INTO tasks (title, project, project_id, assignedTo, assigned_staff_id, status, priority, dueDate, progress, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [title, project, project_id || null, assignedTo, assigned_staff_id || null, status, priority, dueDate, progress ?? 0, description || null]
     )
     connection.release()
     
-    res.status(201).json({ id: result.insertId, title, project, assignedTo, status, priority, dueDate, progress: progress ?? 0, description: description || null })
+    res.status(201).json({ id: result.insertId, title, project, project_id: project_id || null, assignedTo, assigned_staff_id: assigned_staff_id || null, status, priority, dueDate, progress: progress ?? 0, description: description || null })
   } catch (error) {
     console.error('Error creating task:', error)
     res.status(500).json({ error: error.message })
@@ -62,17 +85,28 @@ router.post('/', async (req, res) => {
 // PUT update task
 router.put('/:id', async (req, res) => {
   try {
-    const { title, project, assignedTo, status, priority, dueDate, progress, description } = req.body
+    let { title, project, project_id, assignedTo, assigned_staff_id, status, priority, dueDate, progress, description } = req.body
+
+    const pool = getPool()
+    const connection = await pool.getConnection()
+
+    if (!project && project_id) {
+      const [pRows] = await connection.query('SELECT name FROM projects WHERE id = ?', [project_id])
+      if (pRows.length) project = pRows[0].name
+    }
+    if (!assignedTo && assigned_staff_id) {
+      const [sRows] = await connection.query('SELECT name FROM staff WHERE id = ?', [assigned_staff_id])
+      if (sRows.length) assignedTo = sRows[0].name
+    }
 
     if (!title || !project || !assignedTo || !status || !priority || !dueDate) {
+      connection.release()
       return res.status(400).json({ message: 'Title, project, assignee, status, priority, and due date are required.' })
     }
     
-    const pool = getPool()
-    const connection = await pool.getConnection()
     const [result] = await connection.query(
-      'UPDATE tasks SET title = ?, project = ?, assignedTo = ?, status = ?, priority = ?, dueDate = ?, progress = ?, description = ? WHERE id = ?',
-      [title, project, assignedTo, status, priority, dueDate, progress ?? 0, description || null, req.params.id]
+      'UPDATE tasks SET title = ?, project = ?, project_id = ?, assignedTo = ?, assigned_staff_id = ?, status = ?, priority = ?, dueDate = ?, progress = ?, description = ? WHERE id = ?',
+      [title, project, project_id || null, assignedTo, assigned_staff_id || null, status, priority, dueDate, progress ?? 0, description || null, req.params.id]
     )
 
     if (result.affectedRows === 0) {
@@ -81,7 +115,7 @@ router.put('/:id', async (req, res) => {
     }
     connection.release()
     
-    res.json({ id: req.params.id, title, project, assignedTo, status, priority, dueDate, progress: progress ?? 0, description: description || null })
+    res.json({ id: req.params.id, title, project, project_id: project_id || null, assignedTo, assigned_staff_id: assigned_staff_id || null, status, priority, dueDate, progress: progress ?? 0, description: description || null })
   } catch (error) {
     console.error('Error updating task:', error)
     res.status(500).json({ error: error.message })

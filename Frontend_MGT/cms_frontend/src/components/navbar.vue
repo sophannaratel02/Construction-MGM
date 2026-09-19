@@ -187,7 +187,6 @@ import { auditLogsApi } from '../services/api'
 import { useAlert } from '../composables/useAlert'
 
 const { showInfo } = useAlert()
- main
 
 defineEmits(['toggle-sidebar'])
 
@@ -286,7 +285,6 @@ const handleLogout = async () => {
   window.location.href = '/login'
 
   showInfo('You have logged out of MGM Command System.', 'Logged Out')
- main
 }
 
 // Global keyboard shortcut for Cmd/Ctrl+K

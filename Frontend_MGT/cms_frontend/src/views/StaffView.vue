@@ -251,13 +251,12 @@
 
                     <div class="col">
                       <label class="form-label">Department</label>
-                      <select v-model="form.department" class="form-control">
-                        <option value="Management">Management</option>
-                        <option value="Engineering">Engineering</option>
-                        <option value="Operations">Operations</option>
-                        <option value="Finance">Finance</option>
-                        <option value="Safety">Safety</option>
-                      </select>
+                      <CustomSelect
+                        v-model="form.department"
+                        :options="['Management', 'Engineering', 'Operations', 'Finance', 'Safety']"
+                        placeholder="Select Department"
+                        :allowClear="false"
+                      />
                     </div>
                   </div>
 
@@ -281,11 +280,12 @@
 
                     <div class="col">
                       <label class="form-label">Employment Status</label>
-                      <select v-model="form.status" class="form-control">
-                        <option value="Active">Active</option>
-                        <option value="Inactive">Inactive</option>
-                        <option value="On Leave">On Leave</option>
-                      </select>
+                      <CustomSelect
+                        v-model="form.status"
+                        :options="['Active', 'Inactive', 'On Leave']"
+                        placeholder="Select Status"
+                        :allowClear="false"
+                      />
                     </div>
                   </div>
                 </div>
@@ -309,6 +309,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { staffApi } from '../services/api'
 import { useAlert } from '../composables/useAlert'
+import CustomSelect from '../components/CustomSelect.vue'
 
 const { showSuccess, showError, showWarning } = useAlert()
 
@@ -320,6 +321,12 @@ const editingId = ref(null)
 const searchQuery = ref('')
 const currentFilter = ref('All')
 const failedImages = ref({})
+const presetAvatars = ref([
+  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+  'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
+  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150'
+])
 
 const initialFormState = () => ({
   name: '',
@@ -537,13 +544,6 @@ onMounted(loadStaff)
 .btn-action.delete:hover { background: #fff1f2; color: #e11d48; border-color: #fecdd3; }
 .text-right { text-align: right; }
 
-.modal-backdrop { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); z-index: 1050; display: flex; align-items: center; justify-content: center; }
-.modal-dialog { width: min(100% - 2rem, 540px); }
-.modal-content { background: #1e293b; color: #f8fafc; border-radius: 14px; border: 1px solid rgba(255,255,255,0.1); padding: 20px; }
-.modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; margin-bottom: 16px; }
-.modal-title { font-size: 17px; font-weight: 700; color: #fff; margin: 0; }
-.btn-close-white { background: transparent; border: none; color: #94a3b8; font-size: 18px; cursor: pointer; }
-
 /* Image upload styles */
 .image-upload-container { background: rgba(15, 23, 42, 0.6); padding: 14px; border-radius: 10px; border: 1px dashed #334155; }
 .image-upload-row { display: flex; gap: 14px; align-items: center; }
@@ -562,16 +562,6 @@ onMounted(loadStaff)
 .preset-avatar-btn { width: 28px; height: 28px; border-radius: 50%; padding: 0; border: 2px solid transparent; overflow: hidden; cursor: pointer; background: transparent; }
 .preset-avatar-btn.selected { border-color: #3b82f6; transform: scale(1.1); }
 .preset-avatar-btn img { width: 100%; height: 100%; object-fit: cover; }
-
-.form-group { display: flex; flex-direction: column; gap: 6px; }
-.form-row { display: flex; gap: 12px; }
-.form-row .col { flex: 1; display: flex; flex-direction: column; gap: 6px; }
-.form-label { font-size: 12px; font-weight: 600; color: #cbd5e1; }
-.form-control { background: #0f172a; border: 1px solid #334155; color: #fff; padding: 9px 12px; border-radius: 8px; font-size: 13px; outline: none; }
-.form-control:focus { border-color: #3b82f6; }
-.modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.1); }
-.btn-cancel { background: transparent; border: 1px solid #475569; color: #cbd5e1; padding: 8px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; }
-.btn-save { background: #2563eb; border: none; color: #fff; padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
 
 .state-box, .empty-state { text-align: center; padding: 40px; color: #64748b; }
 .spinner { width: 24px; height: 24px; border: 3px solid #e2e8f0; border-top-color: #2563eb; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 10px; }

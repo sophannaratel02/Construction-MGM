@@ -6,8 +6,13 @@ import { requireAdmin } from '../utils/authorization.js'
 const router = express.Router()
 const APPROVAL_PENDING = 'Pending Approval'
 const projectFields = `
-  SELECT p.*, creator.name AS createdByName, approver.name AS approvedByName
+  SELECT p.*,
+         c.companyName AS clientCompanyName,
+         c.contactPerson AS clientContactPerson,
+         creator.name AS createdByName,
+         approver.name AS approvedByName
   FROM projects p
+  LEFT JOIN clients c ON c.id = p.client_id
   LEFT JOIN users creator ON creator.id = p.userId
   LEFT JOIN users approver ON approver.id = p.approvedBy
 `
@@ -78,16 +83,16 @@ router.get('/:id', async (req, res) => {
 router.post('/', async (req, res) => {
   const validationError = validateProject(req.body || {})
   if (validationError) return res.status(400).json({ message: validationError })
-  const { name, client, startDate, endDate, budget, progress, description } = req.body
+  const { name, client, client_id, startDate, endDate, budget, progress, description } = req.body
   const pool = getPool()
   const connection = await pool.getConnection()
   try {
     await connection.beginTransaction()
     const [result] = await connection.query(
       `INSERT INTO projects
-       (name, client, status, startDate, endDate, budget, progress, description, userId)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [name.trim(), client.trim(), APPROVAL_PENDING, startDate, endDate || null, budget, progress ?? 0, description || null, req.user.id]
+       (name, client, client_id, status, startDate, endDate, budget, progress, description, userId)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [name.trim(), client.trim(), client_id || null, APPROVAL_PENDING, startDate, endDate || null, budget, progress ?? 0, description || null, req.user.id]
     )
     const [admins] = await connection.query("SELECT id FROM users WHERE role = 'admin' AND is_active = 1")
     for (const admin of admins) {
@@ -115,15 +120,15 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   const validationError = validateProject(req.body || {})
   if (validationError) return res.status(400).json({ message: validationError })
-  const { name, client, startDate, endDate, budget, progress, description } = req.body
+  const { name, client, client_id, startDate, endDate, budget, progress, description } = req.body
   const pool = getPool()
   const connection = await pool.getConnection()
   try {
     const scope = req.user.role === 'admin' ? '' : ' AND userId = ?'
-    const params = [name.trim(), client.trim(), startDate, endDate || null, budget, progress ?? 0, description || null, req.params.id]
+    const params = [name.trim(), client.trim(), client_id || null, startDate, endDate || null, budget, progress ?? 0, description || null, req.params.id]
     if (req.user.role !== 'admin') params.push(req.user.id)
     const [result] = await connection.query(
-      `UPDATE projects SET name = ?, client = ?, startDate = ?, endDate = ?, budget = ?, progress = ?, description = ? WHERE id = ?${scope}`,
+      `UPDATE projects SET name = ?, client = ?, client_id = ?, startDate = ?, endDate = ?, budget = ?, progress = ?, description = ? WHERE id = ?${scope}`,
       params
     )
     if (!result.affectedRows) return res.status(404).json({ message: 'Project not found.' })

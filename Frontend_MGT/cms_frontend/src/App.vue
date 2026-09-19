@@ -43,7 +43,6 @@ import Sidebar from './components/sidebar.vue'
 
 import { authApi } from './services/api.js'
 import AlertToast from './components/AlertToast.vue'
-main
 
 const route = useRoute()
 const router = useRouter()

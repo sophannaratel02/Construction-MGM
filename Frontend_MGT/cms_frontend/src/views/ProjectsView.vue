@@ -218,11 +218,11 @@
                       <label class="form-label-custom">
                         Client <span class="text-danger-custom">*</span>
                       </label>
-                      <input
-                        v-model.trim="form.client"
-                        type="text"
-                        class="form-control-custom"
-                        placeholder="e.g. Acme Corp"
+                      <CustomSelect
+                        v-model="form.client_id"
+                        :options="clientsList"
+                        placeholder="Select Client"
+                        @change="onClientChange"
                         required
                       />
                     </div>
@@ -232,11 +232,12 @@
                   <div class="row g-3 mb-3">
                     <div class="col-md-6">
                       <label class="form-label-custom">Status</label>
-                      <select v-model="form.status" class="form-control-custom form-select-custom">
-                        <option value="Pending Approval">Pending Approval</option>
-                        <option value="Approved">Approved</option>
-                        <option value="Rejected">Rejected</option>
-                      </select>
+                      <CustomSelect
+                        v-model="form.status"
+                        :options="['Pending Approval', 'Approved', 'Rejected']"
+                        placeholder="Select Status"
+                        :allowClear="false"
+                      />
                     </div>
                     <div class="col-md-6">
                       <label class="form-label-custom">Progress (%)</label>
@@ -338,14 +339,16 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { projectsApi } from '../services/api'
+import { projectsApi, clientsApi } from '../services/api'
 import { useAlert } from '../composables/useAlert'
 import CustomDatePicker from '../components/CustomDatePicker.vue'
+import CustomSelect from '../components/CustomSelect.vue'
 
 const { showSuccess, showError, showWarning } = useAlert()
 
 /* State */
 const projects = ref([])
+const clientsList = ref([])
 const loading = ref(false)
 const saving = ref(false)
 const showAddForm = ref(false)
@@ -358,6 +361,7 @@ const route = useRoute()
 const emptyForm = () => ({
   name: '',
   client: '',
+  client_id: null,
   status: 'Pending Approval',
   startDate: '',
   endDate: '',
@@ -368,14 +372,25 @@ const emptyForm = () => ({
 
 const form = ref(emptyForm())
 
+const onClientChange = () => {
+  const selected = clientsList.value.find(c => c.id === form.value.client_id)
+  if (selected) {
+    form.value.client = selected.companyName
+  }
+}
+
 /* Actions */
 const loadProjects = async () => {
   loading.value = true
   errorMessage.value = ''
 
   try {
-    const response = await projectsApi.getAll()
-    const data = response?.data
+    const [projRes, clientRes] = await Promise.all([
+      projectsApi.getAll(),
+      clientsApi.getAll()
+    ])
+    clientsList.value = clientRes?.data || []
+    const data = projRes?.data
 
     if (Array.isArray(data)) {
       projects.value = data

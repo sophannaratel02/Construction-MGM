@@ -104,6 +104,18 @@ const routes = [
     name: 'Suppliers',
     component: () => import('../views/SuppliersView.vue'),
     meta: { layout: 'main', requiresAuth: true }
+  },
+  {
+    path: '/purchase-orders',
+    name: 'PurchaseOrders',
+    component: () => import('../views/PurchaseOrdersView.vue'),
+    meta: { layout: 'main', requiresAuth: true }
+  },
+  {
+    path: '/site-daily-logs',
+    name: 'SiteDailyLogs',
+    component: () => import('../views/SiteDailyLogsView.vue'),
+    meta: { layout: 'main', requiresAuth: true }
   }
 ]
 

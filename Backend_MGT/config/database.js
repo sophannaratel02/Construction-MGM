@@ -59,7 +59,54 @@ export async function connectDB() {
     await ensureColumn('suppliers', 'city', 'VARCHAR(100) NULL')
     await ensureColumn('suppliers', 'state', 'VARCHAR(100) NULL')
     await ensureColumn('suppliers', 'zipCode', 'VARCHAR(20) NULL')
-    await ensureColumn('suppliers', 'taxId', 'VARCHAR(50) NULL')
+    await ensureColumn('projects', 'client_id', 'INT NULL')
+    await ensureColumn('materials', 'supplier_id', 'INT NULL')
+    await ensureColumn('equipment', 'project_id', 'INT NULL')
+    await ensureColumn('tasks', 'project_id', 'INT NULL')
+    await ensureColumn('tasks', 'assigned_staff_id', 'INT NULL')
+    await ensureColumn('accounting', 'project_id', 'INT NULL')
+
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS purchase_orders (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        po_number VARCHAR(50) UNIQUE NOT NULL,
+        project_id INT NULL,
+        supplier_id INT NULL,
+        material_id INT NULL,
+        quantity INT NOT NULL,
+        unit_price DECIMAL(10, 2) NOT NULL,
+        total_amount DECIMAL(15, 2) NOT NULL,
+        status VARCHAR(50) NOT NULL DEFAULT 'Pending',
+        order_date DATE NOT NULL,
+        expected_delivery DATE NULL,
+        notes TEXT NULL,
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+        FOREIGN KEY (supplier_id) REFERENCES suppliers(id) ON DELETE SET NULL,
+        FOREIGN KEY (material_id) REFERENCES materials(id) ON DELETE SET NULL,
+        INDEX idx_po_number (po_number),
+        INDEX idx_po_status (status)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    `)
+
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS site_daily_logs (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        project_id INT NOT NULL,
+        log_date DATE NOT NULL,
+        weather VARCHAR(50) NOT NULL DEFAULT 'Clear',
+        headcount INT NOT NULL DEFAULT 0,
+        work_summary LONGTEXT NOT NULL,
+        delays_or_incidents LONGTEXT NULL,
+        reported_by_staff_id INT NULL,
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+        FOREIGN KEY (reported_by_staff_id) REFERENCES staff(id) ON DELETE SET NULL,
+        INDEX idx_log_project_date (project_id, log_date)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    `)
 
     await connection.query(`
       CREATE TABLE IF NOT EXISTS users (

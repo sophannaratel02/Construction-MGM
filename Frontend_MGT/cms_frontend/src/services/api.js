@@ -79,6 +79,7 @@ export const materialsApi = {
   getById: (id) => api.get(`/materials/${id}`),
   create: (data) => api.post('/materials', data),
   update: (id, data) => api.put(`/materials/${id}`, data),
+  approve: (id) => api.put(`/materials/${id}/approve`),
   delete: (id) => api.delete(`/materials/${id}`),
 }
 
@@ -138,6 +139,24 @@ export const auditLogsApi = {
   create: (data) => api.post('/audit-logs', data),
   markAllRead: () => api.patch('/audit-logs/mark-read'),
   clearAll: () => api.delete('/audit-logs'),
+}
+
+// Purchase Orders API
+export const purchaseOrdersApi = {
+  getAll: () => api.get('/purchase-orders'),
+  getById: (id) => api.get(`/purchase-orders/${id}`),
+  create: (data) => api.post('/purchase-orders', data),
+  update: (id, data) => api.put(`/purchase-orders/${id}`, data),
+  delete: (id) => api.delete(`/purchase-orders/${id}`),
+}
+
+// Site Daily Logs API
+export const siteDailyLogsApi = {
+  getAll: () => api.get('/site-daily-logs'),
+  getById: (id) => api.get(`/site-daily-logs/${id}`),
+  create: (data) => api.post('/site-daily-logs', data),
+  update: (id, data) => api.put(`/site-daily-logs/${id}`, data),
+  delete: (id) => api.delete(`/site-daily-logs/${id}`),
 }
 
 export default api

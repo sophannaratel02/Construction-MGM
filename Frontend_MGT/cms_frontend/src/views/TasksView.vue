@@ -199,34 +199,47 @@
 
                   <div class="form-row mb-3">
                     <div class="col">
-                      <label class="form-label">Assigned Project</label>
-                      <input v-model="form.project" type="text" class="form-control" placeholder="e.g. Phnom Penh Tower Extension" />
+                      <label class="form-label">Assigned Project *</label>
+                      <CustomSelect 
+                        v-model="form.project_id" 
+                        :options="projectsList" 
+                        placeholder="Select Project" 
+                        @change="onProjectChange" 
+                        required 
+                      />
                     </div>
 
                     <div class="col">
-                      <label class="form-label">Assignee Lead</label>
-                      <input v-model="form.assignedTo" type="text" class="form-control" placeholder="e.g. Vannak Heng" />
+                      <label class="form-label">Assignee Lead *</label>
+                      <CustomSelect 
+                        v-model="form.assigned_staff_id" 
+                        :options="staffList" 
+                        placeholder="Select Staff Lead" 
+                        @change="onStaffChange" 
+                        required 
+                      />
                     </div>
                   </div>
 
                   <div class="form-row mb-3">
                     <div class="col">
                       <label class="form-label">Priority Level</label>
-                      <select v-model="form.priority" class="form-control">
-                        <option value="Critical">Critical</option>
-                        <option value="High">High</option>
-                        <option value="Medium">Medium</option>
-                        <option value="Low">Low</option>
-                      </select>
+                      <CustomSelect 
+                        v-model="form.priority" 
+                        :options="['Critical', 'High', 'Medium', 'Low']" 
+                        placeholder="Select Priority" 
+                        :allowClear="false" 
+                      />
                     </div>
 
                     <div class="col">
                       <label class="form-label">Execution Status</label>
-                      <select v-model="form.status" class="form-control">
-                        <option value="Not Started">Not Started</option>
-                        <option value="In Progress">In Progress</option>
-                        <option value="Completed">Completed</option>
-                      </select>
+                      <CustomSelect 
+                        v-model="form.status" 
+                        :options="['Not Started', 'In Progress', 'Completed']" 
+                        placeholder="Select Status" 
+                        :allowClear="false" 
+                      />
                     </div>
                   </div>
 
@@ -265,13 +278,16 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { tasksApi } from '../services/api'
+import { tasksApi, projectsApi, staffApi } from '../services/api'
 import CustomDatePicker from '../components/CustomDatePicker.vue'
+import CustomSelect from '../components/CustomSelect.vue'
 import { useAlert } from '../composables/useAlert'
 
 const { showSuccess, showError } = useAlert()
 
 const items = ref([])
+const projectsList = ref([])
+const staffList = ref([])
 const loading = ref(false)
 const saving = ref(false)
 const showAddForm = ref(false)
@@ -282,7 +298,9 @@ const currentFilter = ref('All')
 const initialFormState = () => ({
   title: '',
   project: '',
+  project_id: null,
   assignedTo: '',
+  assigned_staff_id: null,
   description: '',
   priority: 'Medium',
   status: 'Not Started',
@@ -291,6 +309,20 @@ const initialFormState = () => ({
 })
 
 const form = ref(initialFormState())
+
+const onProjectChange = () => {
+  const selected = projectsList.value.find(p => p.id === form.value.project_id)
+  if (selected) {
+    form.value.project = selected.name
+  }
+}
+
+const onStaffChange = () => {
+  const selected = staffList.value.find(s => s.id === form.value.assigned_staff_id)
+  if (selected) {
+    form.value.assignedTo = selected.name
+  }
+}
 
 const inProgressCount = computed(() => items.value.filter(i => (i.status || '').toLowerCase() === 'in progress').length)
 const completedCount = computed(() => items.value.filter(i => (i.status || '').toLowerCase() === 'completed').length)
@@ -311,9 +343,15 @@ const filteredItems = computed(() => {
 const loadTasks = async () => {
   loading.value = true
   try {
-    const res = await tasksApi.getAll()
-    if (Array.isArray(res?.data)) {
-      items.value = res.data
+    const [tasksRes, projRes, staffRes] = await Promise.all([
+      tasksApi.getAll(),
+      projectsApi.getAll(),
+      staffApi.getAll()
+    ])
+    projectsList.value = projRes?.data || []
+    staffList.value = staffRes?.data || []
+    if (Array.isArray(tasksRes?.data)) {
+      items.value = tasksRes.data
     }
   } catch (err) {
     console.error('Failed to load tasks:', err)
@@ -470,22 +508,6 @@ onMounted(loadTasks)
 .btn-action.edit:hover { background: #eff6ff; color: #2563eb; border-color: #bfdbfe; }
 .btn-action.delete:hover { background: #fff1f2; color: #e11d48; border-color: #fecdd3; }
 .text-right { text-align: right; }
-
-.modal-backdrop { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); z-index: 1050; display: flex; align-items: center; justify-content: center; }
-.modal-dialog { width: min(100% - 2rem, 520px); }
-.modal-content { background: #1e293b; color: #f8fafc; border-radius: 14px; border: 1px solid rgba(255,255,255,0.1); padding: 20px; }
-.modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; margin-bottom: 16px; }
-.modal-title { font-size: 17px; font-weight: 700; color: #fff; margin: 0; }
-.btn-close-white { background: transparent; border: none; color: #94a3b8; font-size: 18px; cursor: pointer; }
-.form-group { display: flex; flex-direction: column; gap: 6px; }
-.form-row { display: flex; gap: 12px; }
-.form-row .col { flex: 1; display: flex; flex-direction: column; gap: 6px; }
-.form-label { font-size: 12px; font-weight: 600; color: #cbd5e1; }
-.form-control { background: #0f172a; border: 1px solid #334155; color: #fff; padding: 9px 12px; border-radius: 8px; font-size: 13px; outline: none; }
-.form-control:focus { border-color: #3b82f6; }
-.modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.1); }
-.btn-cancel { background: transparent; border: 1px solid #475569; color: #cbd5e1; padding: 8px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; }
-.btn-save { background: #2563eb; border: none; color: #fff; padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
 
 .state-box, .empty-state { text-align: center; padding: 40px; color: #64748b; }
 .spinner { width: 24px; height: 24px; border: 3px solid #e2e8f0; border-top-color: #2563eb; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 10px; }

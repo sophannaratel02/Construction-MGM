@@ -115,6 +115,7 @@
               <th>Unit Price</th>
               <th>Total Value</th>
               <th>Supplier</th>
+              <th>Status</th>
               <th class="text-right">Actions</th>
             </tr>
           </thead>
@@ -147,10 +148,17 @@
               <td>
                 <span class="supplier-text"><svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" class="me-1 align-text-bottom"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m0 0v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4m-8-11h.01M12 10h.01M16 10h.01M9 14h.01M12 14h.01M16 14h.01"/></svg> {{ item.supplier || 'Direct Supplier' }}</span>
               </td>
+              <td>
+                <span class="status-badge" :class="getStatusClass(item.status)">
+                  <span class="status-dot"></span>
+                  {{ item.status || 'Pending' }}
+                </span>
+              </td>
               <td class="text-right">
                 <div class="actions-group">
+                  <button v-if="isAdmin && item.status === 'Pending'" @click="approveItem(item)" class="btn-action approve" title="Approve Material"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="me-1"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Approve</button>
                   <button @click="editItem(item)" class="btn-action edit" title="Edit Material"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit</button>
-                  <button @click="deleteItem(item.id)" class="btn-action delete" title="Delete Material"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6"/></svg>Delete</button>
+                  <button v-if="isAdmin" @click="deleteItem(item.id)" class="btn-action delete" title="Delete Material"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6"/></svg>Delete</button>
                 </div>
               </td>
             </tr>
@@ -188,13 +196,12 @@
                   <div class="form-row mb-3">
                     <div class="col">
                       <label class="form-label">Category *</label>
-                      <select v-model="form.category" class="form-control">
-                        <option value="Building Materials">Building Materials</option>
-                        <option value="Steel">Steel & Rebar</option>
-                        <option value="Masonry">Masonry & Bricks</option>
-                        <option value="Aggregates">Aggregates & Stone</option>
-                        <option value="Plumbing">Plumbing & Electrical</option>
-                      </select>
+                      <CustomSelect 
+                        v-model="form.category" 
+                        :options="['Building Materials', 'Steel', 'Masonry', 'Aggregates', 'Plumbing']" 
+                        placeholder="Select Category" 
+                        :allowClear="false" 
+                      />
                     </div>
 
                     <div class="col">
@@ -215,9 +222,31 @@
                     </div>
                   </div>
 
-                  <div class="form-group mb-3">
-                    <label class="form-label">Supplier Company *</label>
-                    <input v-model="form.supplier" type="text" class="form-control" placeholder="e.g. Kampot Cement Co., Ltd." required />
+                  <div class="form-row mb-3">
+                    <div class="col">
+                      <label class="form-label">Supplier Company *</label>
+                      <CustomSelect 
+                        v-model="form.supplier_id" 
+                        :options="suppliersList" 
+                        placeholder="Select Supplier" 
+                        @change="onSupplierChange" 
+                        required 
+                      />
+                    </div>
+
+                    <div class="col" v-if="isAdmin">
+                      <label class="form-label">Material Status</label>
+                      <CustomSelect 
+                        v-model="form.status" 
+                        :options="['Pending', 'Approved', 'Out of Stock', 'Discontinued']" 
+                        placeholder="Select Status" 
+                        :allowClear="false" 
+                      />
+                    </div>
+                    <div class="col" v-else>
+                      <label class="form-label">Material Status</label>
+                      <input type="text" class="form-control" :value="form.status || 'Pending'" disabled style="opacity: 0.7; cursor: not-allowed;" />
+                    </div>
                   </div>
 
                   <div class="form-group mb-3">
@@ -243,18 +272,25 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { materialsApi } from '../services/api'
+import { materialsApi, suppliersApi } from '../services/api'
 import { useAlert } from '../composables/useAlert'
+import CustomSelect from '../components/CustomSelect.vue'
 
 const { showSuccess, showError } = useAlert()
 
 const items = ref([])
+const suppliersList = ref([])
 const loading = ref(false)
 const saving = ref(false)
 const showAddForm = ref(false)
 const editingId = ref(null)
 const searchQuery = ref('')
 const currentCategory = ref('All')
+
+const userObj = computed(() => {
+  try { return JSON.parse(localStorage.getItem('cms_user') || '{}') } catch { return {} }
+})
+const isAdmin = computed(() => userObj.value.role === 'admin')
 
 const initialFormState = () => ({
   name: '',
@@ -263,10 +299,38 @@ const initialFormState = () => ({
   quantity: 0,
   unitPrice: 0,
   supplier: '',
+  supplier_id: null,
+  status: 'Pending',
   description: ''
 })
 
 const form = ref(initialFormState())
+
+const onSupplierChange = () => {
+  const selected = suppliersList.value.find(s => s.id === form.value.supplier_id)
+  if (selected) {
+    form.value.supplier = selected.companyName
+  }
+}
+
+const getStatusClass = (status) => {
+  const s = (status || 'Pending').toLowerCase()
+  if (s === 'approved') return 'badge-active'
+  if (s === 'pending') return 'badge-warning'
+  if (s === 'out of stock' || s === 'discontinued') return 'badge-danger'
+  return 'badge-info'
+}
+
+const approveItem = async (item) => {
+  try {
+    await materialsApi.approve(item.id)
+    await load()
+    showSuccess(`Material "${item.name}" has been approved.`, 'Material Approved')
+  } catch (err) {
+    console.error('Failed to approve material:', err)
+    showError(err?.response?.data?.message || 'Failed to approve material.')
+  }
+}
 
 const totalValue = computed(() => {
   return items.value.reduce((acc, item) => acc + (Number(item.quantity) || 0) * (Number(item.unitPrice) || 0), 0)
@@ -296,9 +360,13 @@ const filteredItems = computed(() => {
 const load = async () => {
   loading.value = true
   try {
-    const res = await materialsApi.getAll()
-    if (Array.isArray(res?.data)) {
-      items.value = res.data
+    const [matRes, supRes] = await Promise.all([
+      materialsApi.getAll(),
+      suppliersApi.getAll()
+    ])
+    suppliersList.value = supRes?.data || []
+    if (Array.isArray(matRes?.data)) {
+      items.value = matRes.data
     }
   } catch (err) {
     console.error('Failed to load materials:', err)
@@ -322,6 +390,8 @@ const editItem = (item) => {
     quantity: Number(item.quantity) || 0,
     unitPrice: Number(item.unitPrice) || 0,
     supplier: item.supplier || '',
+    supplier_id: item.supplier_id || null,
+    status: item.status || 'Approved',
     description: item.description || ''
   }
   showAddForm.value = true
@@ -340,12 +410,21 @@ const saveItem = async () => {
     }
     resetForm()
     await load()
-    showSuccess(
-      isEditing
-        ? `Material "${matName}" updated successfully.`
-        : `Material "${matName}" added to inventory successfully.`,
-      isEditing ? 'Material Updated' : 'Material Added'
-    )
+    if (isAdmin.value) {
+      showSuccess(
+        isEditing
+          ? `Material "${matName}" updated successfully.`
+          : `Material "${matName}" added to inventory successfully.`,
+        isEditing ? 'Material Updated' : 'Material Added'
+      )
+    } else {
+      showSuccess(
+        isEditing
+          ? `Material "${matName}" update submitted for Admin review.`
+          : `Material "${matName}" submitted with Pending status. Auto-alert sent to Admin for approval.`,
+        'Submitted for Approval'
+      )
+    }
   } catch (err) {
     console.error('Failed to save material:', err)
     showError(err?.response?.data?.message || 'Failed to save material record.')
@@ -444,26 +523,11 @@ onMounted(load)
 .supplier-text { font-size: 12px; color: #475569; font-weight: 500; }
 
 .actions-group { display: flex; gap: 6px; justify-content: flex-end; }
-.btn-action { border: 1px solid #e2e8f0; background: #fff; padding: 4px 9px; border-radius: 6px; font-size: 11.5px; font-weight: 600; cursor: pointer; }
+.btn-action { border: 1px solid #e2e8f0; background: #fff; padding: 4px 9px; border-radius: 6px; font-size: 11.5px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; }
+.btn-action.approve:hover { background: #d1fae5; color: #047857; border-color: #a7f3d0; }
 .btn-action.edit:hover { background: #eff6ff; color: #2563eb; border-color: #bfdbfe; }
 .btn-action.delete:hover { background: #fff1f2; color: #e11d48; border-color: #fecdd3; }
 .text-right { text-align: right; }
-
-.modal-backdrop { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); z-index: 1050; display: flex; align-items: center; justify-content: center; }
-.modal-dialog { width: min(100% - 2rem, 520px); }
-.modal-content { background: #1e293b; color: #f8fafc; border-radius: 14px; border: 1px solid rgba(255,255,255,0.1); padding: 20px; }
-.modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; margin-bottom: 16px; }
-.modal-title { font-size: 17px; font-weight: 700; color: #fff; margin: 0; }
-.btn-close-white { background: transparent; border: none; color: #94a3b8; font-size: 18px; cursor: pointer; }
-.form-group { display: flex; flex-direction: column; gap: 6px; }
-.form-row { display: flex; gap: 12px; }
-.form-row .col { flex: 1; display: flex; flex-direction: column; gap: 6px; }
-.form-label { font-size: 12px; font-weight: 600; color: #cbd5e1; }
-.form-control { background: #0f172a; border: 1px solid #334155; color: #fff; padding: 9px 12px; border-radius: 8px; font-size: 13px; outline: none; }
-.form-control:focus { border-color: #3b82f6; }
-.modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.1); }
-.btn-cancel { background: transparent; border: 1px solid #475569; color: #cbd5e1; padding: 8px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; }
-.btn-save { background: #2563eb; border: none; color: #fff; padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
 
 .state-box, .empty-state { text-align: center; padding: 40px; color: #64748b; }
 .spinner { width: 24px; height: 24px; border: 3px solid #e2e8f0; border-top-color: #2563eb; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 10px; }
