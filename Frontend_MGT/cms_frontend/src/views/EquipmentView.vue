@@ -263,7 +263,7 @@ import CustomDatePicker from '../components/CustomDatePicker.vue'
 import CustomSelect from '../components/CustomSelect.vue'
 import { useAlert } from '../composables/useAlert'
 
-const { showSuccess, showError } = useAlert()
+const { showSuccess, showError, showConfirm } = useAlert()
 
 const items = ref([])
 const projectsList = ref([])
@@ -372,7 +372,13 @@ const saveItem = async () => {
 }
 
 const deleteItem = async (id) => {
-  if (!confirm('Are you sure you want to delete this equipment unit?')) return
+  const confirmed = await showConfirm({
+    title: 'Delete Equipment Unit',
+    message: 'Are you sure you want to delete this machinery asset? This action cannot be undone.',
+    confirmText: 'Delete Asset',
+    type: 'danger'
+  })
+  if (!confirmed) return
   try {
     await equipmentApi.delete(id)
     await load()

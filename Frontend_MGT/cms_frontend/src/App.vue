@@ -28,11 +28,15 @@
       </main>
     </div>
 
-    <!-- Global Project-Matched Alert Toast Notifications -->
+    <!-- Global Project-Matched Alert Toast Notifications & Confirm Modal -->
     <AlertToast />
+    <ConfirmModal />
   </div>
 
-  <router-view v-else />
+  <template v-else>
+    <router-view />
+    <ConfirmModal />
+  </template>
 </template>
 
 <script setup>
@@ -43,6 +47,7 @@ import Sidebar from './components/sidebar.vue'
 
 import { authApi } from './services/api.js'
 import AlertToast from './components/AlertToast.vue'
+import ConfirmModal from './components/ConfirmModal.vue'
 
 const route = useRoute()
 const router = useRouter()

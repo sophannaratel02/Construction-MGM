@@ -237,7 +237,7 @@ import { ref, computed, onMounted } from 'vue'
 import { clientsApi } from '../services/api'
 import { useAlert } from '../composables/useAlert'
 
-const { showSuccess, showError } = useAlert()
+const { showSuccess, showError, showConfirm } = useAlert()
 
 const items = ref([])
 const loading = ref(false)
@@ -339,7 +339,13 @@ const saveItem = async () => {
 }
 
 const deleteItem = async (id) => {
-  if (!confirm('Are you sure you want to delete this client account?')) return
+  const confirmed = await showConfirm({
+    title: 'Delete Client Account',
+    message: 'Are you sure you want to delete this client profile? This action cannot be undone.',
+    confirmText: 'Delete Client',
+    type: 'danger'
+  })
+  if (!confirmed) return
   try {
     await clientsApi.delete(id)
     await load()

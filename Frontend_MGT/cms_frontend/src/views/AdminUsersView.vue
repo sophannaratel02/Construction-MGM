@@ -114,6 +114,9 @@
 <script setup>
 import { onMounted, reactive, ref } from 'vue'
 import { adminUsersApi } from '../services/api.js'
+import { useAlert } from '../composables/useAlert'
+
+const { showConfirm } = useAlert()
 import CustomSelect from '../components/CustomSelect.vue'
 
 const users = ref([])
@@ -165,7 +168,13 @@ const saveUser = async () => {
 }
 
 const removeUser = async (user) => {
-  if (!confirm(`Delete ${user.name}?`)) return
+  const confirmed = await showConfirm({
+    title: 'Delete User Account',
+    message: `Are you sure you want to delete user account "${user.name}"? This action cannot be undone.`,
+    confirmText: 'Delete User',
+    type: 'danger'
+  })
+  if (!confirmed) return
   try {
     await adminUsersApi.delete(user.id)
     successMessage.value = 'User deleted successfully.'

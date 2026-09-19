@@ -283,7 +283,7 @@ import CustomDatePicker from '../components/CustomDatePicker.vue'
 import CustomSelect from '../components/CustomSelect.vue'
 import { useAlert } from '../composables/useAlert'
 
-const { showSuccess, showError } = useAlert()
+const { showSuccess, showError, showConfirm } = useAlert()
 
 const items = ref([])
 const projectsList = ref([])
@@ -409,7 +409,13 @@ const saveItem = async () => {
 }
 
 const deleteItem = async (id) => {
-  if (!confirm('Are you sure you want to delete this task?')) return
+  const confirmed = await showConfirm({
+    title: 'Delete Task',
+    message: 'Are you sure you want to delete this work order task? This action cannot be undone.',
+    confirmText: 'Delete Task',
+    type: 'danger'
+  })
+  if (!confirmed) return
   try {
     await tasksApi.delete(id)
     await loadTasks()

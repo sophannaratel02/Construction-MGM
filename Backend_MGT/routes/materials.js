@@ -73,6 +73,29 @@ router.post('/', async (req, res) => {
       [name, category, unit, quantity, unitPrice, supplier, supplier_id || null, itemStatus, description || null]
     )
 
+    const materialId = result.insertId
+    const poNumber = `PO-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(materialId).padStart(4, '0')}`
+    const totalAmount = Number(quantity) * Number(unitPrice)
+    const todayDate = new Date().toISOString().split('T')[0]
+
+    // Auto-create Purchase Order entry for material request
+    await connection.query(`
+      INSERT INTO purchase_orders 
+      (po_number, project_id, supplier_id, material_id, quantity, unit_price, total_amount, status, order_date, notes) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [
+      poNumber,
+      req.body.project_id || null,
+      supplier_id || null,
+      materialId,
+      quantity,
+      unitPrice,
+      totalAmount,
+      itemStatus,
+      todayDate,
+      description || `Purchase Order auto-generated for material request "${name}".`
+    ])
+
     // Notify all admin users if pending approval or created by user
     const actorName = req.user?.name || req.user?.email || 'User'
     await createAuditLog(connection, {
@@ -120,6 +143,12 @@ router.put('/:id/approve', requireAdmin, async (req, res) => {
       connection.release()
       return res.status(404).json({ message: 'Material not found.' })
     }
+
+    // Also update linked purchase order status
+    await connection.query(
+      "UPDATE purchase_orders SET status = 'Approved' WHERE material_id = ?",
+      [req.params.id]
+    )
 
     const actorName = req.user?.name || req.user?.email || 'Admin'
     await createAuditLog(connection, {
@@ -173,6 +202,15 @@ router.put('/:id', async (req, res) => {
       'UPDATE materials SET name = ?, category = ?, unit = ?, quantity = ?, unitPrice = ?, supplier = ?, supplier_id = ?, status = ?, description = ? WHERE id = ?',
       [name, category, unit, quantity, unitPrice, supplier, supplier_id || null, itemStatus, description || null, req.params.id]
     )
+
+    // Update linked Purchase Order record
+    const totalAmount = Number(quantity) * Number(unitPrice)
+    await connection.query(`
+      UPDATE purchase_orders 
+      SET supplier_id = ?, quantity = ?, unit_price = ?, total_amount = ?, status = ?
+      WHERE material_id = ?
+    `, [supplier_id || null, quantity, unitPrice, totalAmount, itemStatus, req.params.id])
+
     connection.release()
     
     res.json({ id: req.params.id, name, category, unit, quantity, unitPrice, supplier, supplier_id: supplier_id || null, status: itemStatus, description: description || null })
@@ -187,6 +225,7 @@ router.delete('/:id', requireAdmin, async (req, res) => {
   try {
     const pool = getPool()
     const connection = await pool.getConnection()
+    await connection.query('DELETE FROM purchase_orders WHERE material_id = ?', [req.params.id])
     await connection.query('DELETE FROM materials WHERE id = ?', [req.params.id])
     connection.release()
     

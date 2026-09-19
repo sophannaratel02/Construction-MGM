@@ -344,7 +344,7 @@ import { useAlert } from '../composables/useAlert'
 import CustomDatePicker from '../components/CustomDatePicker.vue'
 import CustomSelect from '../components/CustomSelect.vue'
 
-const { showSuccess, showError, showWarning } = useAlert()
+const { showSuccess, showError, showWarning, showConfirm } = useAlert()
 
 /* State */
 const projects = ref([])
@@ -494,13 +494,20 @@ const editProject = (project) => {
 }
 
 const approveProject = async (project) => {
-  if (!confirm(`Approve "${project.name}"?`)) return
+  const confirmed = await showConfirm({
+    title: 'Approve Project',
+    message: `Are you sure you want to approve "${project.name}"?`,
+    confirmText: 'Approve',
+    type: 'info'
+  })
+  if (!confirmed) return
   try {
     await projectsApi.approve(project.id)
     window.dispatchEvent(new Event('cms-notifications-refresh'))
     await loadProjects()
+    showSuccess(`Project "${project.name}" approved successfully.`, 'Project Approved')
   } catch (error) {
-    alert(error?.response?.data?.message || 'Failed to approve project.')
+    showError(error?.response?.data?.message || 'Failed to approve project.')
   }
 }
 
@@ -511,8 +518,9 @@ const rejectProject = async (project) => {
     await projectsApi.reject(project.id, rejectionReason.trim())
     window.dispatchEvent(new Event('cms-notifications-refresh'))
     await loadProjects()
+    showSuccess(`Project "${project.name}" rejected.`, 'Project Rejected')
   } catch (error) {
-    alert(error?.response?.data?.message || 'Failed to reject project.')
+    showError(error?.response?.data?.message || 'Failed to reject project.')
   }
 }
 
@@ -522,7 +530,13 @@ const deleteProject = async (id) => {
     return
   }
 
-  if (!confirm('Are you sure you want to delete this project?')) return
+  const confirmed = await showConfirm({
+    title: 'Delete Project',
+    message: 'Are you sure you want to delete this project? This will remove all associated project milestones and allocations.',
+    confirmText: 'Delete Project',
+    type: 'danger'
+  })
+  if (!confirmed) return
 
   try {
     await projectsApi.delete(id)

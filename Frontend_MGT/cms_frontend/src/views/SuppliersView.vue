@@ -257,7 +257,7 @@ import { suppliersApi } from '../services/api'
 import { useAlert } from '../composables/useAlert'
 import CustomSelect from '../components/CustomSelect.vue'
 
-const { showSuccess, showError } = useAlert()
+const { showSuccess, showError, showConfirm } = useAlert()
 
 const items = ref([])
 const loading = ref(false)
@@ -364,7 +364,13 @@ const saveItem = async () => {
 }
 
 const deleteItem = async (id) => {
-  if (!confirm('Are you sure you want to delete this supplier?')) return
+  const confirmed = await showConfirm({
+    title: 'Delete Supplier',
+    message: 'Are you sure you want to delete this vendor supplier? This action cannot be undone.',
+    confirmText: 'Delete Supplier',
+    type: 'danger'
+  })
+  if (!confirmed) return
   try {
     await suppliersApi.delete(id)
     await load()

@@ -257,7 +257,7 @@ import CustomDatePicker from '../components/CustomDatePicker.vue'
 import CustomSelect from '../components/CustomSelect.vue'
 import { useAlert } from '../composables/useAlert'
 
-const { showSuccess, showError } = useAlert()
+const { showSuccess, showError, showConfirm } = useAlert()
 
 const items = ref([])
 const projectsList = ref([])
@@ -371,7 +371,13 @@ const saveItem = async () => {
 }
 
 const deleteItem = async (id) => {
-  if (!confirm('Are you sure you want to delete this accounting record?')) return
+  const confirmed = await showConfirm({
+    title: 'Delete Accounting Entry',
+    message: 'Are you sure you want to delete this financial record? This action cannot be undone.',
+    confirmText: 'Delete Record',
+    type: 'danger'
+  })
+  if (!confirmed) return
   try {
     await accountingApi.delete(id)
     await load()

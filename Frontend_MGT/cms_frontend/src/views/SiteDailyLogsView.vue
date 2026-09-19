@@ -256,7 +256,7 @@ import { siteDailyLogsApi, projectsApi, staffApi } from '../services/api'
 import { useAlert } from '../composables/useAlert'
 import CustomSelect from '../components/CustomSelect.vue'
 
-const { showSuccess, showError } = useAlert()
+const { showSuccess, showError, showConfirm } = useAlert()
 
 const logs = ref([])
 const projects = ref([])
@@ -371,14 +371,19 @@ const saveLog = async () => {
 }
 
 const confirmDelete = async (log) => {
-  if (confirm(`Delete daily log for date ${formatDate(log.log_date)}?`)) {
-    try {
-      await siteDailyLogsApi.delete(log.id)
-      showSuccess('Daily log deleted.')
-      load()
-    } catch (err) {
-      showError('Failed to delete daily log.')
-    }
+  const confirmed = await showConfirm({
+    title: 'Delete Site Daily Log',
+    message: `Are you sure you want to delete the daily log for date ${formatDate(log.log_date)}? This action cannot be undone.`,
+    confirmText: 'Delete Log',
+    type: 'danger'
+  })
+  if (!confirmed) return
+  try {
+    await siteDailyLogsApi.delete(log.id)
+    showSuccess('Daily log deleted successfully.', 'Log Deleted')
+    load()
+  } catch (err) {
+    showError(err.response?.data?.message || 'Failed to delete daily log.')
   }
 }
 

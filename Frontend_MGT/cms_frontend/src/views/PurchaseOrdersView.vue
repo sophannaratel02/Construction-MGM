@@ -282,7 +282,7 @@ import { purchaseOrdersApi, projectsApi, suppliersApi, materialsApi } from '../s
 import { useAlert } from '../composables/useAlert'
 import CustomSelect from '../components/CustomSelect.vue'
 
-const { showSuccess, showError } = useAlert()
+const { showSuccess, showError, showConfirm } = useAlert()
 
 const orders = ref([])
 const projects = ref([])
@@ -411,14 +411,19 @@ const saveOrder = async () => {
 }
 
 const confirmDelete = async (order) => {
-  if (confirm(`Delete purchase order ${order.po_number}?`)) {
-    try {
-      await purchaseOrdersApi.delete(order.id)
-      showSuccess('Purchase order deleted.')
-      load()
-    } catch (err) {
-      showError('Failed to delete purchase order.')
-    }
+  const confirmed = await showConfirm({
+    title: 'Delete Purchase Order',
+    message: `Are you sure you want to delete purchase order ${order.po_number}? This action cannot be undone.`,
+    confirmText: 'Delete PO',
+    type: 'danger'
+  })
+  if (!confirmed) return
+  try {
+    await purchaseOrdersApi.delete(order.id)
+    showSuccess('Purchase order deleted successfully.', 'PO Deleted')
+    load()
+  } catch (err) {
+    showError(err.response?.data?.message || 'Failed to delete purchase order.')
   }
 }
 

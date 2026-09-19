@@ -90,6 +90,40 @@ export async function connectDB() {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
     `)
 
+    // Auto-sync purchase orders for existing materials that do not have a PO record yet
+    try {
+      const [unlinkedMaterials] = await connection.query(`
+        SELECT m.* FROM materials m
+        LEFT JOIN purchase_orders po ON m.id = po.material_id
+        WHERE po.id IS NULL
+      `)
+
+      for (const mat of unlinkedMaterials) {
+        const poNum = `PO-2026-${String(mat.id).padStart(4, '0')}`
+        const totalAmt = (Number(mat.quantity) || 0) * (Number(mat.unitPrice) || 0)
+        const dateStr = mat.createdAt ? new Date(mat.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
+        
+        await connection.query(`
+          INSERT INTO purchase_orders 
+          (po_number, project_id, supplier_id, material_id, quantity, unit_price, total_amount, status, order_date, notes)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `, [
+          poNum,
+          null,
+          mat.supplier_id || null,
+          mat.id,
+          mat.quantity || 0,
+          mat.unitPrice || 0,
+          totalAmt,
+          mat.status || 'Pending',
+          dateStr,
+          mat.description || `Auto-generated Purchase Order for material "${mat.name}".`
+        ])
+      }
+    } catch (poSyncError) {
+      console.warn('Purchase orders auto-sync warning:', poSyncError.message)
+    }
+
     await connection.query(`
       CREATE TABLE IF NOT EXISTS site_daily_logs (
         id INT PRIMARY KEY AUTO_INCREMENT,

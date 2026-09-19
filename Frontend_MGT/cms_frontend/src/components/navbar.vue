@@ -16,7 +16,7 @@
           </svg>
         </button>
         <!-- Global Quick Search Input -->
-        <div class="header-search-wrapper d-none d-md-flex align-items-center">
+        <div class="header-search-wrapper d-none d-md-flex align-items-center" ref="searchWrapperRef">
           <svg class="search-icon" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
@@ -24,43 +24,136 @@
             v-model="searchQuery"
             type="text" 
             class="search-input" 
-            placeholder=""
-            @focus="showSearchDropdown = true"
-            @blur="handleSearchBlur"
+           
+            @focus="handleSearchFocus"
+            @keydown.down.prevent="navigateResults(1)"
+            @keydown.up.prevent="navigateResults(-1)"
+            @keydown.enter.prevent="selectCurrentResult"
+            @keydown.esc="showSearchDropdown = false"
           />
           <kbd class="search-shortcut">⌘K</kbd>
 
-          <!-- Search Dropdown Suggestions -->
-          <div v-if="showSearchDropdown && searchQuery.trim()" class="search-results-dropdown">
-            <div class="search-result-group-title">Quick Navigation</div>
-            <router-link to="/projects" class="search-result-item" @click="showSearchDropdown = false">
-              <span class="d-flex align-items-center gap-2">
-                <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m0 0v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4m-8-11h.01M12 10h.01M16 10h.01M9 14h.01M12 14h.01M16 14h.01" /></svg>
-                Projects Directory
-              </span>
-              <span class="badge-tag">Projects</span>
-            </router-link>
-            <router-link to="/tasks" class="search-result-item" @click="showSearchDropdown = false">
-              <span class="d-flex align-items-center gap-2">
-                <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
-                Work Orders & Tasks
-              </span>
-              <span class="badge-tag">Tasks</span>
-            </router-link>
-            <router-link to="/staff" class="search-result-item" @click="showSearchDropdown = false">
-              <span class="d-flex align-items-center gap-2">
-                <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-                Staff Roster
-              </span>
-              <span class="badge-tag">Staff</span>
-            </router-link>
-            <router-link to="/equipment" class="search-result-item" @click="showSearchDropdown = false">
-              <span class="d-flex align-items-center gap-2">
-                <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                Fleet & Machinery
-              </span>
-              <span class="badge-tag">Equipment</span>
-            </router-link>
+          <!-- Real-Time Categorized Search Dropdown -->
+          <div v-if="showSearchDropdown && searchQuery.trim()" class="search-results-dropdown custom-scroll">
+            <div v-if="isLoadingSearch" class="p-3 text-center text-muted font-12">
+              <span class="spinner-border spinner-border-sm me-2" role="status"></span> Loading search index...
+            </div>
+
+            <template v-else-if="totalResultsCount > 0">
+              <!-- Projects Category -->
+              <div v-if="categorizedResults.projects.length" class="search-category-block">
+                <div class="search-result-group-title d-flex align-items-center gap-1">
+                  <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m0 0v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4m-8-11h.01M12 10h.01M16 10h.01M9 14h.01M12 14h.01M16 14h.01" /></svg>
+                  Projects ({{ categorizedResults.projects.length }})
+                </div>
+                <div 
+                  v-for="item in categorizedResults.projects" 
+                  :key="'proj-' + item.id"
+                  class="search-result-item"
+                  :class="{ active: flatResultsList[activeIndex]?.id === item.id && flatResultsList[activeIndex]?.type === 'project' }"
+                  @click="goToResult('/projects', { search: item.name })"
+                >
+                  <div class="d-flex flex-column gap-1 overflow-hidden me-2">
+                    <span class="item-title text-truncate">{{ item.name }}</span>
+                    <span class="item-sub text-truncate">{{ item.client || 'Internal Project' }} • {{ item.location || 'Site Location N/A' }}</span>
+                  </div>
+                  <span class="badge-tag status-pill" :class="getStatusBadgeClass(item.status)">{{ item.status || 'Active' }}</span>
+                </div>
+              </div>
+
+              <!-- Materials Category -->
+              <div v-if="categorizedResults.materials.length" class="search-category-block">
+                <div class="search-result-group-title d-flex align-items-center gap-1">
+                  <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+                  Materials ({{ categorizedResults.materials.length }})
+                </div>
+                <div 
+                  v-for="item in categorizedResults.materials" 
+                  :key="'mat-' + item.id"
+                  class="search-result-item"
+                  :class="{ active: flatResultsList[activeIndex]?.id === item.id && flatResultsList[activeIndex]?.type === 'material' }"
+                  @click="goToResult('/materials', { search: item.name })"
+                >
+                  <div class="d-flex flex-column gap-1 overflow-hidden me-2">
+                    <span class="item-title text-truncate">{{ item.name }}</span>
+                    <span class="item-sub text-truncate">{{ item.category || 'General' }} • Stock: {{ item.quantity ?? item.stock_quantity ?? 0 }} {{ item.unit || 'units' }}</span>
+                  </div>
+                  <span class="badge-tag bg-material">{{ item.category || 'Material' }}</span>
+                </div>
+              </div>
+
+              <!-- Staff Roster Category -->
+              <div v-if="categorizedResults.staff.length" class="search-category-block">
+                <div class="search-result-group-title d-flex align-items-center gap-1">
+                  <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                  Staff Roster ({{ categorizedResults.staff.length }})
+                </div>
+                <div 
+                  v-for="item in categorizedResults.staff" 
+                  :key="'staff-' + item.id"
+                  class="search-result-item"
+                  :class="{ active: flatResultsList[activeIndex]?.id === item.id && flatResultsList[activeIndex]?.type === 'staff' }"
+                  @click="goToResult('/staff', { search: item.name })"
+                >
+                  <div class="d-flex flex-column gap-1 overflow-hidden me-2">
+                    <span class="item-title text-truncate">{{ item.name }}</span>
+                    <span class="item-sub text-truncate">{{ item.role || 'Staff Member' }} • {{ item.department || 'Operations' }}</span>
+                  </div>
+                  <span class="badge-tag bg-staff">{{ item.role || 'Staff' }}</span>
+                </div>
+              </div>
+
+              <!-- Tasks & Work Orders Category -->
+              <div v-if="categorizedResults.tasks.length" class="search-category-block">
+                <div class="search-result-group-title d-flex align-items-center gap-1">
+                  <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
+                  Tasks ({{ categorizedResults.tasks.length }})
+                </div>
+                <div 
+                  v-for="item in categorizedResults.tasks" 
+                  :key="'task-' + item.id"
+                  class="search-result-item"
+                  :class="{ active: flatResultsList[activeIndex]?.id === item.id && flatResultsList[activeIndex]?.type === 'task' }"
+                  @click="goToResult('/tasks', { search: item.title })"
+                >
+                  <div class="d-flex flex-column gap-1 overflow-hidden me-2">
+                    <span class="item-title text-truncate">{{ item.title || item.name }}</span>
+                    <span class="item-sub text-truncate">Priority: {{ item.priority || 'Normal' }} • {{ item.assigned_to ? 'Assigned to ' + item.assigned_to : 'Unassigned' }}</span>
+                  </div>
+                  <span class="badge-tag status-pill" :class="getStatusBadgeClass(item.status)">{{ item.status || 'Pending' }}</span>
+                </div>
+              </div>
+
+              <!-- Equipment Category -->
+              <div v-if="categorizedResults.equipment.length" class="search-category-block">
+                <div class="search-result-group-title d-flex align-items-center gap-1">
+                  <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                  Equipment ({{ categorizedResults.equipment.length }})
+                </div>
+                <div 
+                  v-for="item in categorizedResults.equipment" 
+                  :key="'eq-' + item.id"
+                  class="search-result-item"
+                  :class="{ active: flatResultsList[activeIndex]?.id === item.id && flatResultsList[activeIndex]?.type === 'equipment' }"
+                  @click="goToResult('/equipment', { search: item.name })"
+                >
+                  <div class="d-flex flex-column gap-1 overflow-hidden me-2">
+                    <span class="item-title text-truncate">{{ item.name }}</span>
+                    <span class="item-sub text-truncate">{{ item.category || 'Machinery' }} • {{ item.location || 'Storage Yard' }}</span>
+                  </div>
+                  <span class="badge-tag status-pill" :class="getStatusBadgeClass(item.status)">{{ item.status || 'Available' }}</span>
+                </div>
+              </div>
+            </template>
+
+            <!-- No Results Found State -->
+            <div v-else class="p-3 text-center text-muted">
+              <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" class="mb-2 text-secondary">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <div class="font-13 text-light font-weight-600">No matching records found</div>
+              <div class="font-11 text-muted mt-1">No items match "{{ searchQuery }}" across projects, materials, staff, or equipment.</div>
+            </div>
           </div>
         </div>
       </div>
@@ -85,7 +178,7 @@
             <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
             </svg>
-            <span v-if="unreadCount > 0" class="notification-indicator">{{ unreadCount }}</span>
+            <span v-if="unreadCount > 0" class="notification-indicator">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
           </button>
 
           <!-- Notifications Popup -->
@@ -179,11 +272,17 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
-
-import { authApi, notificationsApi } from '../services/api'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { auditLogsApi } from '../services/api'
+import { 
+  authApi, 
+  notificationsApi, 
+  projectsApi, 
+  materialsApi, 
+  staffApi, 
+  tasksApi, 
+  equipmentApi 
+} from '../services/api'
 import { useAlert } from '../composables/useAlert'
 
 const { showInfo } = useAlert()
@@ -197,6 +296,143 @@ const showUserMenu = ref(false)
 const notifications = ref([])
 const currentUser = ref(JSON.parse(localStorage.getItem('cms_user') || '{}'))
 const router = useRouter()
+
+// Real-Time Search Indexes & States
+const searchWrapperRef = ref(null)
+const isLoadingSearch = ref(false)
+const isSearchIndexLoaded = ref(false)
+const activeIndex = ref(-1)
+
+const rawSearchData = ref({
+  projects: [],
+  materials: [],
+  staff: [],
+  tasks: [],
+  equipment: []
+})
+
+// Load Search Indexes lazily on focus/mount
+const loadSearchIndex = async () => {
+  if (isSearchIndexLoaded.value || isLoadingSearch.value) return
+  isLoadingSearch.value = true
+  try {
+    const [projRes, matRes, staffRes, taskRes, eqRes] = await Promise.allSettled([
+      projectsApi.getAll(),
+      materialsApi.getAll(),
+      staffApi.getAll(),
+      tasksApi.getAll(),
+      equipmentApi.getAll()
+    ])
+
+    rawSearchData.value = {
+      projects: projRes.status === 'fulfilled' ? (projRes.value.data || []) : [],
+      materials: matRes.status === 'fulfilled' ? (matRes.value.data || []) : [],
+      staff: staffRes.status === 'fulfilled' ? (staffRes.value.data || []) : [],
+      tasks: taskRes.status === 'fulfilled' ? (taskRes.value.data || []) : [],
+      equipment: eqRes.status === 'fulfilled' ? (eqRes.value.data || []) : []
+    }
+    isSearchIndexLoaded.value = true
+  } catch (err) {
+    console.error('Failed to load search indexes:', err)
+  } finally {
+    isLoadingSearch.value = false
+  }
+}
+
+const handleSearchFocus = () => {
+  showSearchDropdown.value = true
+  loadSearchIndex()
+}
+
+// Categorized results filtering
+const categorizedResults = computed(() => {
+  const query = searchQuery.value.trim().toLowerCase()
+  if (!query) {
+    return { projects: [], materials: [], staff: [], tasks: [], equipment: [] }
+  }
+
+  const matchStr = (val) => String(val || '').toLowerCase().includes(query)
+
+  return {
+    projects: rawSearchData.value.projects.filter(p => 
+      matchStr(p.name) || matchStr(p.client) || matchStr(p.location) || matchStr(p.status)
+    ).slice(0, 4),
+
+    materials: rawSearchData.value.materials.filter(m => 
+      matchStr(m.name) || matchStr(m.category) || matchStr(m.supplier)
+    ).slice(0, 4),
+
+    staff: rawSearchData.value.staff.filter(s => 
+      matchStr(s.name) || matchStr(s.role) || matchStr(s.department) || matchStr(s.email)
+    ).slice(0, 4),
+
+    tasks: rawSearchData.value.tasks.filter(t => 
+      matchStr(t.title || t.name) || matchStr(t.priority) || matchStr(t.status) || matchStr(t.assigned_to)
+    ).slice(0, 4),
+
+    equipment: rawSearchData.value.equipment.filter(e => 
+      matchStr(e.name) || matchStr(e.category) || matchStr(e.status) || matchStr(e.location)
+    ).slice(0, 4)
+  }
+})
+
+// Flatten results for keyboard navigation
+const flatResultsList = computed(() => {
+  const list = []
+  categorizedResults.value.projects.forEach(item => list.push({ ...item, type: 'project', route: '/projects' }))
+  categorizedResults.value.materials.forEach(item => list.push({ ...item, type: 'material', route: '/materials' }))
+  categorizedResults.value.staff.forEach(item => list.push({ ...item, type: 'staff', route: '/staff' }))
+  categorizedResults.value.tasks.forEach(item => list.push({ ...item, type: 'task', route: '/tasks' }))
+  categorizedResults.value.equipment.forEach(item => list.push({ ...item, type: 'equipment', route: '/equipment' }))
+  return list
+})
+
+const totalResultsCount = computed(() => flatResultsList.value.length)
+
+watch(searchQuery, () => {
+  activeIndex.value = -1
+  if (searchQuery.value.trim()) {
+    showSearchDropdown.value = true
+  }
+})
+
+const navigateResults = (direction) => {
+  if (!flatResultsList.value.length) return
+  const max = flatResultsList.value.length - 1
+  let next = activeIndex.value + direction
+  if (next < 0) next = max
+  if (next > max) next = 0
+  activeIndex.value = next
+}
+
+const selectCurrentResult = () => {
+  if (activeIndex.value >= 0 && activeIndex.value < flatResultsList.value.length) {
+    const item = flatResultsList.value[activeIndex.value]
+    const label = item.name || item.title
+    goToResult(item.route, { search: label })
+  }
+}
+
+const goToResult = (routePath, queryParams = {}) => {
+  showSearchDropdown.value = false
+  searchQuery.value = ''
+  router.push({ path: routePath, query: queryParams })
+}
+
+const getStatusBadgeClass = (status) => {
+  const s = String(status || '').toLowerCase()
+  if (['active', 'completed', 'available', 'approved', 'in progress', 'high'].includes(s)) return 'bg-success-subtle text-success border border-success-subtle'
+  if (['pending', 'in maintenance', 'medium'].includes(s)) return 'bg-warning-subtle text-warning border border-warning-subtle'
+  if (['delayed', 'cancelled', 'inactive', 'critical'].includes(s)) return 'bg-danger-subtle text-danger border border-danger-subtle'
+  return 'bg-secondary-subtle text-light border border-secondary-subtle'
+}
+
+// Close dropdown on outside click
+const handleClickOutside = (event) => {
+  if (searchWrapperRef.value && !searchWrapperRef.value.contains(event.target)) {
+    showSearchDropdown.value = false
+  }
+}
 
 const unreadCount = computed(() => {
   return notifications.value.filter(n => !n.is_read).length
@@ -244,12 +480,6 @@ const formatTimeAgo = (dateStr) => {
   return date.toLocaleDateString()
 }
 
-const handleSearchBlur = () => {
-  setTimeout(() => {
-    showSearchDropdown.value = false
-  }, 200)
-}
-
 const toggleNotifications = () => {
   showNotifications.value = !showNotifications.value
   showUserMenu.value = false
@@ -292,13 +522,17 @@ const handleKeyDown = (e) => {
   if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
     e.preventDefault()
     const input = document.querySelector('.search-input')
-    if (input) input.focus()
+    if (input) {
+      input.focus()
+      showSearchDropdown.value = true
+    }
   }
 }
 
 onMounted(() => {
   syncUser()
   window.addEventListener('keydown', handleKeyDown)
+  document.addEventListener('click', handleClickOutside)
   window.addEventListener('cms-auth-change', syncUser)
   window.addEventListener('cms-notifications-refresh', fetchNotifications)
   fetchNotifications()
@@ -306,6 +540,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', handleKeyDown)
+  document.removeEventListener('click', handleClickOutside)
   window.removeEventListener('cms-auth-change', syncUser)
   window.removeEventListener('cms-notifications-refresh', fetchNotifications)
 })
@@ -380,20 +615,32 @@ onBeforeUnmount(() => {
   top: 44px;
   left: 0;
   right: 0;
-  background: #1e293b;
-  border: 1px solid rgba(255,255,255,0.1);
+  width: 420px;
+  max-height: 480px;
+  overflow-y: auto;
+  background: #0f172a;
+  border: 1px solid #334155;
   border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.65);
   padding: 8px;
   z-index: 1040;
+}
+
+.search-category-block {
+  margin-bottom: 8px;
+}
+
+.search-category-block:last-child {
+  margin-bottom: 0;
 }
 
 .search-result-group-title {
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
-  color: #64748b;
-  padding: 6px 10px;
+  color: #38bdf8;
+  padding: 6px 10px 4px 10px;
+  letter-spacing: 0.5px;
 }
 
 .search-result-item {
@@ -405,19 +652,45 @@ onBeforeUnmount(() => {
   text-decoration: none;
   font-size: 13px;
   border-radius: 8px;
-  transition: background 0.15s ease;
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
 
-.search-result-item:hover {
-  background: rgba(255, 255, 255, 0.08);
+.search-result-item:hover,
+.search-result-item.active {
+  background: rgba(56, 189, 248, 0.15);
+  border-left: 3px solid #38bdf8;
+}
+
+.item-title {
+  font-weight: 600;
+  font-size: 13px;
+  color: #f1f5f9;
+}
+
+.item-sub {
+  font-size: 11px;
+  color: #94a3b8;
 }
 
 .badge-tag {
-  font-size: 10px;
+  font-size: 10.5px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.bg-material {
+  background: rgba(168, 85, 247, 0.2);
+  color: #c084fc;
+  border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+.bg-staff {
   background: rgba(59, 130, 246, 0.2);
   color: #60a5fa;
-  padding: 2px 6px;
-  border-radius: 4px;
+  border: 1px solid rgba(59, 130, 246, 0.3);
 }
 
 .sys-telemetry-pill {
@@ -466,13 +739,22 @@ onBeforeUnmount(() => {
 
 .notification-indicator {
   position: absolute;
-  top: 9px;
-  right: 9px;
-  width: 7px;
-  height: 7px;
+  top: 3px;
+  right: 3px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
   background-color: #3b82f6;
-  border-radius: 50%;
-  box-shadow: 0 0 8px #3b82f6;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.6);
+  border: 1.5px solid #0f172a;
 }
 
 .notifications-dropdown {

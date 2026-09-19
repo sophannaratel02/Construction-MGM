@@ -311,7 +311,26 @@ import { staffApi } from '../services/api'
 import { useAlert } from '../composables/useAlert'
 import CustomSelect from '../components/CustomSelect.vue'
 
-const { showSuccess, showError, showWarning } = useAlert()
+const { showSuccess, showError, showWarning, showConfirm } = useAlert()
+
+const deleteItem = async (id) => {
+  const confirmed = await showConfirm({
+    title: 'Delete Staff Member',
+    message: 'Are you sure you want to delete this staff member? This action cannot be undone.',
+    confirmText: 'Delete Member',
+    cancelText: 'Cancel',
+    type: 'danger'
+  })
+  if (!confirmed) return
+  try {
+    await staffApi.delete(id)
+    await loadStaff()
+    showSuccess('Staff member removed successfully.', 'Staff Deleted')
+  } catch (err) {
+    console.error('Failed to delete staff:', err)
+    showError(err?.response?.data?.message || 'Failed to delete staff.')
+  }
+}
 
 const items = ref([])
 const loading = ref(false)
@@ -421,17 +440,7 @@ const saveItem = async () => {
   }
 }
 
-const deleteItem = async (id) => {
-  if (!confirm('Are you sure you want to delete this staff member?')) return
-  try {
-    await staffApi.delete(id)
-    await loadStaff()
-    showSuccess('Staff member removed successfully.', 'Staff Deleted')
-  } catch (err) {
-    console.error('Failed to delete staff:', err)
-    showError(err?.response?.data?.message || 'Failed to delete staff.')
-  }
-}
+
 
 const onFileSelected = (event) => {
   const file = event.target.files[0]

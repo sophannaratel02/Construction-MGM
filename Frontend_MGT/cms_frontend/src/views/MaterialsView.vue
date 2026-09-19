@@ -234,18 +234,14 @@
                       />
                     </div>
 
-                    <div class="col" v-if="isAdmin">
-                      <label class="form-label">Material Status</label>
+                    <div class="col">
+                      <label class="form-label">Target Construction Project</label>
                       <CustomSelect 
-                        v-model="form.status" 
-                        :options="['Pending', 'Approved', 'Out of Stock', 'Discontinued']" 
-                        placeholder="Select Status" 
-                        :allowClear="false" 
+                        v-model="form.project_id" 
+                        :options="projectsList" 
+                        placeholder="Select Project (Optional)" 
+                        :allowClear="true" 
                       />
-                    </div>
-                    <div class="col" v-else>
-                      <label class="form-label">Material Status</label>
-                      <input type="text" class="form-control" :value="form.status || 'Pending'" disabled style="opacity: 0.7; cursor: not-allowed;" />
                     </div>
                   </div>
 
@@ -272,14 +268,15 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { materialsApi, suppliersApi } from '../services/api'
+import { materialsApi, suppliersApi, projectsApi } from '../services/api'
 import { useAlert } from '../composables/useAlert'
 import CustomSelect from '../components/CustomSelect.vue'
 
-const { showSuccess, showError } = useAlert()
+const { showSuccess, showError, showConfirm } = useAlert()
 
 const items = ref([])
 const suppliersList = ref([])
+const projectsList = ref([])
 const loading = ref(false)
 const saving = ref(false)
 const showAddForm = ref(false)
@@ -300,6 +297,7 @@ const initialFormState = () => ({
   unitPrice: 0,
   supplier: '',
   supplier_id: null,
+  project_id: null,
   status: 'Pending',
   description: ''
 })
@@ -360,11 +358,13 @@ const filteredItems = computed(() => {
 const load = async () => {
   loading.value = true
   try {
-    const [matRes, supRes] = await Promise.all([
+    const [matRes, supRes, projRes] = await Promise.all([
       materialsApi.getAll(),
-      suppliersApi.getAll()
+      suppliersApi.getAll(),
+      projectsApi.getAll()
     ])
     suppliersList.value = supRes?.data || []
+    projectsList.value = projRes?.data || []
     if (Array.isArray(matRes?.data)) {
       items.value = matRes.data
     }
@@ -434,7 +434,13 @@ const saveItem = async () => {
 }
 
 const deleteItem = async (id) => {
-  if (!confirm('Are you sure you want to delete this material?')) return
+  const confirmed = await showConfirm({
+    title: 'Delete Material Item',
+    message: 'Are you sure you want to delete this material from inventory? This action cannot be undone.',
+    confirmText: 'Delete Material',
+    type: 'danger'
+  })
+  if (!confirmed) return
   try {
     await materialsApi.delete(id)
     await load()
