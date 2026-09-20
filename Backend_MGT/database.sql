@@ -366,10 +366,10 @@ INSERT INTO site_daily_logs (id, project_id, log_date, weather, headcount, work_
 
 -- Sample Data for Audit Logs & System Notifications
 INSERT INTO audit_logs (id, action, module, description, performedBy, severity, isRead) VALUES
-(1, 'CREATE', 'Equipment', 'បានបញ្ជូនគ្រឿងចក្រជីកដី CAT 320D ទៅកាន់ការដ្ឋាន BKK1។', 'អ្នកប្រព័ន្ធ (Admin User)', 'info', 0),
+(1, 'CREATE', 'Equipment', 'បានបញ្ជូនគ្រឿងចក្រជីកដី CAT 320D ទៅកាន់ការដ្ឋាន BKK1។', 'Admin User', 'info', 0),
 (2, 'ALERT', 'Safety', 'ការត្រួតពិនិត្យសុវត្ថិភាពការដ្ឋាន បានឆ្លងផុតដោយគ្មានកំហុស។', 'ស្រីនាង គឹម', 'success', 0),
 (3, 'CREATE', 'Materials', 'ទទួលបានស៊ីម៉ង់ត៍កំពតចំនួន ២,៥០០ បាវ នៅឃ្លាំងកណ្តាល។', 'ដារ៉ា ជា', 'info', 0),
 (4, 'CREATE', 'Accounting', 'បានចេញវិក្កយបត្រប្រាក់កក់ $300,000.00 សម្រាប់គម្រោងពង្រីកអគារ ភ្នំពេញថៅវើ។', 'បុប្ផា ម៉េង', 'success', 1),
 (5, 'UPDATE', 'Tasks', 'បានធ្វើបច្ចុប្បន្នភាពវឌ្ឍនភាពការងារដល់ ៦៥% លើការចាក់បេតុង B2។', 'វណ្ណៈ ហេង', 'info', 1),
-(6, 'UPDATE', 'Projects', 'បានកែសម្រួលថវិកាគម្រោងស្ពានអាកាសផ្លូវជាតិលេខ៣ ទៅ $4,500,000.00។', 'អ្នកប្រព័ន្ធ (Admin User)', 'warning', 1);
+(6, 'UPDATE', 'Projects', 'បានកែសម្រួលថវិកាគម្រោងស្ពានអាកាសផ្លូវជាតិលេខ៣ ទៅ $4,500,000.00។', 'Admin User', 'warning', 1);
 
