@@ -1,0 +1,1 @@
+var e=`/assets/modern_construction_hero-DkSS6mg5.jpg`;export{e as t};
