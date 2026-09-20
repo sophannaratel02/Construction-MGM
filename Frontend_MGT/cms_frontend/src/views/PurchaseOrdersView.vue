@@ -35,50 +35,62 @@
 
     <!-- Top KPI Summary Cards -->
     <section class="kpi-summary-grid">
-      <div class="kpi-card">
-        <div class="kpi-icon bg-blue">
-          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <div class="kpi-card kpi-blue">
+        <div class="kpi-icon-glow icon-blue">
+          <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
           </svg>
         </div>
-        <div>
-          <div class="kpi-num">{{ orders.length }}</div>
+        <div class="kpi-info">
+          <div class="kpi-num-row">
+            <span class="kpi-num color-blue">{{ orders.length }}</span>
+            <span class="kpi-mini-tag tag-blue">Total</span>
+          </div>
           <div class="kpi-label">Total Purchase Orders</div>
         </div>
       </div>
 
-      <div class="kpi-card">
-        <div class="kpi-icon bg-emerald">
-          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <div class="kpi-card kpi-emerald">
+        <div class="kpi-icon-glow icon-emerald">
+          <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
           </svg>
         </div>
-        <div>
-          <div class="kpi-num">{{ formatCurrency(totalValuation) }}</div>
+        <div class="kpi-info">
+          <div class="kpi-num-row">
+            <span class="kpi-num color-emerald">{{ formatCurrency(totalValuation) }}</span>
+            <span class="kpi-mini-tag tag-emerald">Valuation</span>
+          </div>
           <div class="kpi-label">Total Order Valuation</div>
         </div>
       </div>
 
-      <div class="kpi-card">
-        <div class="kpi-icon bg-amber">
-          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <div class="kpi-card kpi-amber">
+        <div class="kpi-icon-glow icon-amber">
+          <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
           </svg>
         </div>
-        <div>
-          <div class="kpi-num">{{ pendingCount }}</div>
+        <div class="kpi-info">
+          <div class="kpi-num-row">
+            <span class="kpi-num color-amber">{{ pendingCount }}</span>
+            <span class="kpi-mini-tag tag-amber">Review</span>
+          </div>
           <div class="kpi-label">Pending / In Review</div>
         </div>
       </div>
 
-      <div class="kpi-card">
-        <div class="kpi-icon bg-purple">
-          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <div class="kpi-card kpi-purple">
+        <div class="kpi-icon-glow icon-purple">
+          <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
           </svg>
         </div>
-        <div>
-          <div class="kpi-num">{{ deliveredCount }}</div>
+        <div class="kpi-info">
+          <div class="kpi-num-row">
+            <span class="kpi-num color-purple">{{ deliveredCount }}</span>
+            <span class="kpi-mini-tag tag-purple">Fulfilling</span>
+          </div>
           <div class="kpi-label">Fulfilling / Delivered</div>
         </div>
       </div>
@@ -496,21 +508,26 @@ onMounted(() => {
 }
 .btn-secondary-custom:hover { background: #f8fafc; border-color: #cbd5e1; }
 
-.kpi-summary-grid {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;
-}
-.kpi-card {
-  background: white; border-radius: 16px; padding: 20px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 16px;
-}
-.kpi-icon {
-  width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
-}
-.bg-blue { background: rgba(59, 130, 246, 0.12); color: #2563eb; }
-.bg-emerald { background: rgba(16, 185, 129, 0.12); color: #059669; }
-.bg-amber { background: rgba(245, 158, 11, 0.12); color: #d97706; }
-.bg-purple { background: rgba(124, 58, 237, 0.12); color: #7c3aed; }
-.kpi-num { font-size: 1.4rem; font-weight: 800; color: #0f172a; }
-.kpi-label { font-size: 0.82rem; color: #64748b; font-weight: 500; }
+.kpi-summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 18px; margin-bottom: 24px; }
+.kpi-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 18px 20px; display: flex; align-items: center; gap: 16px; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04); }
+
+.kpi-purple, .kpi-blue, .kpi-emerald, .kpi-amber { background: #ffffff; border-color: #e2e8f0; }
+.kpi-card:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08); border-color: #cbd5e1; }
+
+.kpi-icon-glow { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #ffffff; transition: transform 0.25s ease; }
+.kpi-card:hover .kpi-icon-glow { transform: scale(1.08) rotate(3deg); }
+
+.icon-purple, .icon-blue, .icon-emerald, .icon-amber { background: linear-gradient(135deg, #2563eb, #1d4ed8); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
+
+.kpi-info { display: flex; flex-direction: column; flex-grow: 1; }
+.kpi-num-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.kpi-num { font-size: 24px; font-weight: 800; line-height: 1.1; letter-spacing: -0.5px; color: #0f172a; }
+.color-purple, .color-blue, .color-emerald, .color-amber { color: #0f172a; }
+
+.kpi-mini-tag { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.4px; }
+.tag-purple, .tag-blue, .tag-emerald, .tag-amber { background: #eff6ff; color: #1d4ed8; border: 1px solid #dbeafe; }
+
+.kpi-label { font-size: 13px; font-weight: 600; color: #475569; margin-top: 3px; }
 
 .toolbar-box {
   background: white; border-radius: 14px; padding: 14px 18px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;

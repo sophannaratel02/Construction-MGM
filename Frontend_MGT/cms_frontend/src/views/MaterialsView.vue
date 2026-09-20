@@ -35,34 +35,54 @@
 
     <!-- Top KPI Summary Cards -->
     <section class="kpi-summary-grid">
-      <div class="kpi-card">
-        <div class="kpi-icon bg-blue"><svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg></div>
-        <div>
-          <div class="kpi-num">{{ items.length }}</div>
+      <div class="kpi-card kpi-blue">
+        <div class="kpi-icon-glow icon-blue">
+          <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+        </div>
+        <div class="kpi-info">
+          <div class="kpi-num-row">
+            <span class="kpi-num color-blue">{{ items.length }}</span>
+            <span class="kpi-mini-tag tag-blue">Types</span>
+          </div>
           <div class="kpi-label">Material Types</div>
         </div>
       </div>
 
-      <div class="kpi-card">
-        <div class="kpi-icon bg-emerald"><svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
-        <div>
-          <div class="kpi-num">{{ formatCurrency(totalValue) }}</div>
+      <div class="kpi-card kpi-emerald">
+        <div class="kpi-icon-glow icon-emerald">
+          <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <div class="kpi-info">
+          <div class="kpi-num-row">
+            <span class="kpi-num color-emerald">{{ formatCurrency(totalValue) }}</span>
+            <span class="kpi-mini-tag tag-emerald">Valuation</span>
+          </div>
           <div class="kpi-label">Total Stock Valuation</div>
         </div>
       </div>
 
-      <div class="kpi-card">
-        <div class="kpi-icon bg-amber"><svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg></div>
-        <div>
-          <div class="kpi-num">{{ lowStockCount }}</div>
+      <div class="kpi-card kpi-amber">
+        <div class="kpi-icon-glow icon-amber">
+          <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        </div>
+        <div class="kpi-info">
+          <div class="kpi-num-row">
+            <span class="kpi-num color-amber">{{ lowStockCount }}</span>
+            <span class="kpi-mini-tag tag-amber">Alerts</span>
+          </div>
           <div class="kpi-label">Low Stock Alerts</div>
         </div>
       </div>
 
-      <div class="kpi-card">
-        <div class="kpi-icon bg-purple"><svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m0 0v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4m-8-11h.01M12 10h.01M16 10h.01M9 14h.01M12 14h.01M16 14h.01"/></svg></div>
-        <div>
-          <div class="kpi-num">{{ uniqueSuppliersCount }}</div>
+      <div class="kpi-card kpi-purple">
+        <div class="kpi-icon-glow icon-purple">
+          <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m0 0v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4m-8-11h.01M12 10h.01M16 10h.01M9 14h.01M12 14h.01M16 14h.01"/></svg>
+        </div>
+        <div class="kpi-info">
+          <div class="kpi-num-row">
+            <span class="kpi-num color-purple">{{ uniqueSuppliersCount }}</span>
+            <span class="kpi-mini-tag tag-purple">Suppliers</span>
+          </div>
           <div class="kpi-label">Active Suppliers</div>
         </div>
       </div>
@@ -492,12 +512,26 @@ onMounted(load)
 .btn-secondary-custom { display: inline-flex; align-items: center; gap: 8px; padding: 9px 15px; background: #fff; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 13px; font-weight: 600; color: #334155; cursor: pointer; }
 .btn-primary-custom { display: inline-flex; align-items: center; gap: 8px; padding: 9px 18px; background: linear-gradient(135deg, #2563eb, #1d4ed8); border: none; border-radius: 10px; font-size: 13px; font-weight: 600; color: #fff; cursor: pointer; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25); }
 
-.kpi-summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 20px; }
-.kpi-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 16px 18px; display: flex; align-items: center; gap: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
-.kpi-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
-.bg-blue { background: #dbeafe; } .bg-emerald { background: #d1fae5; } .bg-amber { background: #fef3c7; } .bg-purple { background: #ede9fe; }
-.kpi-num { font-size: 22px; font-weight: 800; color: #0f172a; line-height: 1.1; }
-.kpi-label { font-size: 12px; color: #64748b; margin-top: 2px; }
+.kpi-summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 18px; margin-bottom: 24px; }
+.kpi-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 18px 20px; display: flex; align-items: center; gap: 16px; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04); }
+
+.kpi-purple, .kpi-blue, .kpi-emerald, .kpi-amber { background: #ffffff; border-color: #e2e8f0; }
+.kpi-card:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08); border-color: #cbd5e1; }
+
+.kpi-icon-glow { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #ffffff; transition: transform 0.25s ease; }
+.kpi-card:hover .kpi-icon-glow { transform: scale(1.08) rotate(3deg); }
+
+.icon-purple, .icon-blue, .icon-emerald, .icon-amber { background: linear-gradient(135deg, #2563eb, #1d4ed8); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
+
+.kpi-info { display: flex; flex-direction: column; flex-grow: 1; }
+.kpi-num-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.kpi-num { font-size: 26px; font-weight: 800; line-height: 1.1; letter-spacing: -0.5px; color: #0f172a; }
+.color-purple, .color-blue, .color-emerald, .color-amber { color: #0f172a; }
+
+.kpi-mini-tag { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.4px; }
+.tag-purple, .tag-blue, .tag-emerald, .tag-amber { background: #eff6ff; color: #1d4ed8; border: 1px solid #dbeafe; }
+
+.kpi-label { font-size: 13px; font-weight: 600; color: #475569; margin-top: 3px; }
 
 .toolbar-box { display: flex; justify-content: space-between; align-items: center; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 16px; margin-bottom: 20px; gap: 16px; flex-wrap: wrap; }
 .search-input-wrap { display: flex; align-items: center; gap: 8px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 7px 12px; flex-grow: 1; max-width: 400px; }

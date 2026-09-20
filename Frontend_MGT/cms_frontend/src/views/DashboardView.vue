@@ -84,13 +84,13 @@
       <!-- 2. Budget & Financials -->
       <div class="kpi-card budget-card" @click="navigateTo('/accounting')">
         <div class="kpi-top">
-          <div class="kpi-icon-wrapper bg-emerald-subtle">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2">
+          <div class="kpi-icon-wrapper bg-blue-subtle">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2">
               <line x1="12" y1="1" x2="12" y2="23"></line>
               <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
             </svg>
           </div>
-          <span class="kpi-badge pill-emerald">Controlled</span>
+          <span class="kpi-badge pill-blue">Controlled</span>
         </div>
         <div class="kpi-body">
           <div class="kpi-value">{{ formatCurrency(summary.totalBudget) }}</div>
@@ -113,15 +113,15 @@
       <!-- 3. Field Workforce -->
       <div class="kpi-card staff-card" @click="navigateTo('/staff')">
         <div class="kpi-top">
-          <div class="kpi-icon-wrapper bg-purple-subtle">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2">
+          <div class="kpi-icon-wrapper bg-blue-subtle">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2">
               <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
               <circle cx="9" cy="7" r="4"/>
               <path d="M23 21v-2a4 4 0 00-3-3.87"/>
               <path d="M16 3.13a4 4 0 010 7.75"/>
             </svg>
           </div>
-          <span class="kpi-badge pill-purple">100% Deployed</span>
+          <span class="kpi-badge pill-blue">100% Deployed</span>
         </div>
         <div class="kpi-body">
           <div class="kpi-value">{{ stats.totalStaff || summary.staffList.length }}</div>
@@ -139,13 +139,13 @@
       <!-- 4. Fleet & Machinery -->
       <div class="kpi-card equipment-card" @click="navigateTo('/equipment')">
         <div class="kpi-top">
-          <div class="kpi-icon-wrapper bg-amber-subtle">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2">
+          <div class="kpi-icon-wrapper bg-blue-subtle">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2">
               <circle cx="12" cy="12" r="10"></circle>
               <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
             </svg>
           </div>
-          <span class="kpi-badge pill-amber">{{ summary.equipmentAvailable }} Available</span>
+          <span class="kpi-badge pill-blue">{{ summary.equipmentAvailable }} Available</span>
         </div>
         <div class="kpi-body">
           <div class="kpi-value">{{ stats.totalEquipment || summary.equipmentList.length }}</div>
@@ -158,7 +158,7 @@
               <strong>{{ summary.fleetReadiness }}%</strong>
             </div>
             <div class="mini-bar-track">
-              <div class="mini-bar-fill fill-amber" :style="{ width: summary.fleetReadiness + '%' }"></div>
+              <div class="mini-bar-fill fill-blue" :style="{ width: summary.fleetReadiness + '%' }"></div>
             </div>
           </div>
         </div>
@@ -167,13 +167,13 @@
       <!-- 5. Tasks Execution Velocity -->
       <div class="kpi-card task-card" @click="navigateTo('/tasks')">
         <div class="kpi-top">
-          <div class="kpi-icon-wrapper bg-cyan-subtle">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0891b2" stroke-width="2">
+          <div class="kpi-icon-wrapper bg-blue-subtle">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2">
               <path d="M9 11l3 3L22 4"/>
               <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
             </svg>
           </div>
-          <span class="kpi-badge pill-cyan">{{ summary.tasksPending }} In Flight</span>
+          <span class="kpi-badge pill-blue">{{ summary.tasksPending }} In Flight</span>
         </div>
         <div class="kpi-body">
           <div class="kpi-value">{{ stats.totalTasks || summary.tasksList.length }}</div>
@@ -1427,11 +1427,7 @@ onBeforeUnmount(() => {
   justify-content: center;
 }
 
-.bg-blue-subtle { background: rgba(37, 99, 235, 0.1); }
-.bg-emerald-subtle { background: rgba(16, 185, 129, 0.1); }
-.bg-purple-subtle { background: rgba(124, 58, 237, 0.1); }
-.bg-amber-subtle { background: rgba(245, 158, 11, 0.1); }
-.bg-cyan-subtle { background: rgba(8, 145, 178, 0.1); }
+.bg-blue-subtle, .bg-emerald-subtle, .bg-purple-subtle, .bg-amber-subtle, .bg-cyan-subtle { background: #eff6ff; border: 1px solid #dbeafe; }
 
 .kpi-badge {
   font-size: 11.5px;
@@ -1440,11 +1436,7 @@ onBeforeUnmount(() => {
   border-radius: 6px;
 }
 
-.pill-blue { background: #dbeafe; color: #1e40af; }
-.pill-emerald { background: #d1fae5; color: #065f46; }
-.pill-purple { background: #ede9fe; color: #5b21b6; }
-.pill-amber { background: #fef3c7; color: #92400e; }
-.pill-cyan { background: #cffafe; color: #155e75; }
+.pill-blue, .pill-emerald, .pill-purple, .pill-amber, .pill-cyan { background: #eff6ff; color: #1d4ed8; border: 1px solid #dbeafe; }
 
 .kpi-value {
   font-size: 28px;

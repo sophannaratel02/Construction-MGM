@@ -35,39 +35,48 @@
 
     <!-- Top KPI Summary Cards -->
     <section class="kpi-summary-grid">
-      <div class="kpi-card">
-        <div class="kpi-icon bg-blue">
-          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <div class="kpi-card kpi-blue">
+        <div class="kpi-icon-glow icon-blue">
+          <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
           </svg>
         </div>
-        <div>
-          <div class="kpi-num">{{ logs.length }}</div>
+        <div class="kpi-info">
+          <div class="kpi-num-row">
+            <span class="kpi-num color-blue">{{ logs.length }}</span>
+            <span class="kpi-mini-tag tag-blue">Logs</span>
+          </div>
           <div class="kpi-label">Logged Field Days</div>
         </div>
       </div>
 
-      <div class="kpi-card">
-        <div class="kpi-icon bg-emerald">
-          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <div class="kpi-card kpi-emerald">
+        <div class="kpi-icon-glow icon-emerald">
+          <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
             <circle cx="9" cy="7" r="4"/>
           </svg>
         </div>
-        <div>
-          <div class="kpi-num">{{ avgHeadcount }}</div>
+        <div class="kpi-info">
+          <div class="kpi-num-row">
+            <span class="kpi-num color-emerald">{{ avgHeadcount }}</span>
+            <span class="kpi-mini-tag tag-emerald">Staff</span>
+          </div>
           <div class="kpi-label">Avg Daily Site Headcount</div>
         </div>
       </div>
 
-      <div class="kpi-card">
-        <div class="kpi-icon bg-amber">
-          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <div class="kpi-card kpi-amber">
+        <div class="kpi-icon-glow icon-amber">
+          <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
           </svg>
         </div>
-        <div>
-          <div class="kpi-num">{{ incidentsCount }}</div>
+        <div class="kpi-info">
+          <div class="kpi-num-row">
+            <span class="kpi-num color-amber">{{ incidentsCount }}</span>
+            <span class="kpi-mini-tag tag-amber">Incidents</span>
+          </div>
           <div class="kpi-label">Weather / Site Incidents</div>
         </div>
       </div>
@@ -439,14 +448,26 @@ onMounted(() => {
   display: flex; align-items: center; gap: 8px; cursor: pointer; transition: all 0.2s ease;
 }
 
-.kpi-summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
-.kpi-card { background: white; border-radius: 16px; padding: 20px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 16px; }
-.kpi-icon { width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
-.bg-blue { background: rgba(59, 130, 246, 0.12); color: #2563eb; }
-.bg-emerald { background: rgba(16, 185, 129, 0.12); color: #059669; }
-.bg-amber { background: rgba(245, 158, 11, 0.12); color: #d97706; }
-.kpi-num { font-size: 1.4rem; font-weight: 800; color: #0f172a; }
-.kpi-label { font-size: 0.82rem; color: #64748b; font-weight: 500; }
+.kpi-summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 18px; margin-bottom: 24px; }
+.kpi-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 18px 20px; display: flex; align-items: center; gap: 16px; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04); }
+
+.kpi-purple, .kpi-blue, .kpi-emerald, .kpi-amber { background: #ffffff; border-color: #e2e8f0; }
+.kpi-card:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08); border-color: #cbd5e1; }
+
+.kpi-icon-glow { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #ffffff; transition: transform 0.25s ease; }
+.kpi-card:hover .kpi-icon-glow { transform: scale(1.08) rotate(3deg); }
+
+.icon-purple, .icon-blue, .icon-emerald, .icon-amber { background: linear-gradient(135deg, #2563eb, #1d4ed8); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
+
+.kpi-info { display: flex; flex-direction: column; flex-grow: 1; }
+.kpi-num-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.kpi-num { font-size: 26px; font-weight: 800; line-height: 1.1; letter-spacing: -0.5px; color: #0f172a; }
+.color-purple, .color-blue, .color-emerald, .color-amber { color: #0f172a; }
+
+.kpi-mini-tag { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.4px; }
+.tag-purple, .tag-blue, .tag-emerald, .tag-amber { background: #eff6ff; color: #1d4ed8; border: 1px solid #dbeafe; }
+
+.kpi-label { font-size: 13px; font-weight: 600; color: #475569; margin-top: 3px; }
 
 .toolbar-box { background: white; border-radius: 14px; padding: 14px 18px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; }
 .search-input-wrap { position: relative; width: 320px; }
