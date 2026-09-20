@@ -61,7 +61,7 @@
                   id="email"
                   v-model="email"
                   type="email"
-                  placeholder="admin@cms.kh"
+                  placeholder="បញ្ចូលអាសយដ្ឋានអ៊ីមែលរបស់អ្នក"
                   required
                 />
               </div>
@@ -149,8 +149,8 @@ import { authApi } from '../../services/api.js'
 
 const router = useRouter()
 const route = useRoute()
-const email = ref('admin@cms.kh')
-const password = ref('Admin@123')
+// const email = ref('admin@cms.kh')
+// const password = ref('Admin@123')
 const showPassword = ref(false)
 const errorMessage = ref('')
 const isSubmitting = ref(false)
